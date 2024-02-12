@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
             crypto_ctx = md5_init(0);
         } else if (strncmp(argv[i], "sha256", 6) == 0) {
             flags |= FLAG_ALG_SHA256;
-            // crypto_ctx = sha256_init(0);
+            crypto_ctx = sha256_init(0);
         } else { // isn't a flag, nor a command, must be the file or string to hash
             if (arg != NULL) {
                 printf("ft_ssl: %s: '%s'\n", ERR_INVALID_FLAG, argv[i]);
