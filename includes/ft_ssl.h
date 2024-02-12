@@ -5,13 +5,30 @@
 #include <string.h>
 #include "short_types.h"
 
+// Errors
 #define ERR_MEM_ALLOC_FAILED "failed to allocate memory"
+#define ERR_ALG_SPECIFIED_TWICE "algorithm specified twice"
+#define ERR_ALG_NOT_FOUND "algorithm not found"
+#define ERR_INVALID_FLAG "invalid flag"
+#define ERR_DUPLICATE_FLAG "flag specified twice"
+
+// Crypto constants
+#define MAX_DIGEST_SIZE 32 // SHA-256
+#define BUFFER_SIZE 4096 // will chomp 4096 bytes at a time
 
 // Helper macros
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
+#define IS_SET(flags, flag) ((flags & flag) == flag)
+#define SET_FLAG(flags, flag) (flags |= flag)
+#define UNSET_FLAG(flags, flag) (flags &= ~flag)
 
-#define MAX_DIGEST_SIZE 32 // SHA-256
-#define BUFFER_SIZE 4096 // will chomp 4096 bytes at a time
+// Flags
+#define FLAG_P          0b00000001
+#define FLAG_Q          0b00000010
+#define FLAG_R          0b00000100
+#define FLAG_S          0b00001000
+#define FLAG_ALG_MD5    0b10000000
+#define FLAG_ALG_SHA256 0b01000000
 
 // forward declaration
 struct s_context;
