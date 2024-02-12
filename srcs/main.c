@@ -1,4 +1,5 @@
 #include "ft_ssl.h"
+#include <fcntl.h>
 
 /**
  * @brief Passes the argument to the crypto context, when -s flag is used.
@@ -9,15 +10,18 @@
  * @param arg 
  */
 void parse_arg_input(t_context *ctx, char *arg) {
-    i32 len = strlen(arg);
-    for (i32 i = 0; i < len; i += BUFFER_SIZE) {
-        i32 buffer_length = len - i;
+    ctx->known_size = strlen(arg);
+    for (u64 i = 0; i < ctx->known_size; i += BUFFER_SIZE) {
+        i32 buffer_length = ctx->known_size - i;
         if (buffer_length > BUFFER_SIZE) {
             buffer_length = BUFFER_SIZE;
         }
-        ctx->chomp_fn(ctx, (byte *)arg + i, buffer_length);
+        // Copy bytes from the buffer to the internal buffer
+        ctx_chomp(ctx, (byte *)arg + i, buffer_length);
+        // Process the buffer
+        ctx->digest_fn(ctx);
     }
-    if (len % BUFFER_SIZE == 0) {
+    if (ctx->known_size % BUFFER_SIZE == 0) {
         ctx->buffer_size = 0;
         ctx->final_fn(ctx);
     }
@@ -35,11 +39,20 @@ void parse_arg_input(t_context *ctx, char *arg) {
  * @param ctx Crypto context (contains the hash function)
  * @param path Path to the file to hash
 */
-void parse_file_input(t_context *ctx, char *arg) {
-    // TODO
+void parse_file_input(t_context *ctx, char *path) {
     (void) ctx;
-    (void) arg;
+    (void) path;
     return;
+    // int fd = 0; // default to stdin
+    // if (path != NULL) { // if path was specified, open the file for reading
+    //     fd = open(path, O_RDONLY);
+    // }
+    // if (fd == -1) {
+    //     printf("ft_ssl: %s: %s\n", ERR_FILE_NOT_FOUND, path);
+    //     return;
+    // }
+    // byte buffer[BUFFER_SIZE];
+    // i32 bytes_read = 0;
 }
 
 /**
@@ -88,15 +101,20 @@ int main(int argc, char **argv) {
     t_context crypto_ctx;
     char *arg = NULL;
 
-    for (i32 i = 1; i < argc; i++) {
+    if (strncmp(argv[1], "md5\0", 4) == 0) {
+        flags |= FLAG_ALG_MD5;
+        crypto_ctx = md5_init(0);
+    } else if (strncmp(argv[1], "sha256\0", 7) == 0) {
+        flags |= FLAG_ALG_SHA256;
+        crypto_ctx = sha256_init(0);
+    } else {
+        printf("ft_ssl: %s: '%s'\n", ERR_ALG_NOT_FOUND, argv[1]);
+        return (1);
+    }
+
+    for (i32 i = 2; i < argc; i++) {
         if (argv[i][0] == '-') {
             parse_arg(argv[i], &flags);
-        } else if (strncmp(argv[i], "md5", 3) == 0) {
-            flags |= FLAG_ALG_MD5;
-            crypto_ctx = md5_init(0);
-        } else if (strncmp(argv[i], "sha256", 6) == 0) {
-            flags |= FLAG_ALG_SHA256;
-            crypto_ctx = sha256_init(0);
         } else { // isn't a flag, nor a command, must be the file or string to hash
             if (arg != NULL) {
                 printf("ft_ssl: %s: '%s'\n", ERR_INVALID_FLAG, argv[i]);

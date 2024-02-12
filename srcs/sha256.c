@@ -13,7 +13,7 @@
 t_context sha256_init(u64 known_size) {
     t_context new_ctx;
     new_ctx.chomped_bytes = 0;
-    new_ctx.chomp_fn = NULL;
+    new_ctx.digest_fn = NULL;
     new_ctx.final_fn = NULL;
     new_ctx.digest_size = SHA256_DIGEST_SIZE * 4;
     new_ctx.known_size = known_size;

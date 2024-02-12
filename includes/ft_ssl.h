@@ -11,6 +11,7 @@
 #define ERR_ALG_NOT_FOUND "algorithm not found"
 #define ERR_INVALID_FLAG "invalid flag"
 #define ERR_DUPLICATE_FLAG "flag specified twice"
+#define ERR_FILE_NOT_FOUND "file not found"
 
 // Crypto constants
 #define MAX_DIGEST_SIZE 32 // SHA-256
@@ -33,14 +34,14 @@
 // forward declaration
 struct s_context;
 
-typedef void (*chomp_func)(struct s_context *ctx, const byte *input, u64 size);
+typedef void (*digest_func)(struct s_context *ctx);
 typedef void (*final_func)(struct s_context *ctx);
 
 /*
     A context is a structure that holds the state of the hash function.
     - Chomped bytes (meaning the bytes that have been processed)
     - Initialization bytes (the initial bytes that are used to initialize the hash function)
-    - The chomp function itself
+    - The digest function itself
     - The finalization function
     - The digest (the final hash value)
     - The size of the digest (MD5 is 16 bqytes long, SHA-256 is 32 bytes long)
@@ -49,18 +50,23 @@ typedef void (*final_func)(struct s_context *ctx);
 
 typedef struct s_context {
     u64 chomped_bytes;                  // The number of bytes that have been processed
-    chomp_func chomp_fn;                // The function that consumes N bytes of the input
+    digest_func digest_fn;              // The function that consumes N bytes of the internal buffer
     final_func final_fn;                // The finalization function
     byte digest[MAX_DIGEST_SIZE * 4];   // The final hash value -> will be initialized depending on the hash function
     u8 digest_size;                     // The size of the digest, we have to know it to not overflow the digest buffer :^)
     byte buffer[BUFFER_SIZE+128];       // The buffer that holds the input + space for padding
     u16 buffer_size;                    // Number of bytes in the buffer
     u64 known_size;                     // Total size of the input, 0 if unknown
+    bool stream_finished;               // True if the stream has been finished (no more input)
 } t_context;
 
 // Bit utils functions
 void to_bytes(u32 n, byte *output);
 u32 to_u32(const byte *bytes);
+
+// Generic functions / stuff
+void ctx_chomp(t_context *ctx, const byte *buf, u64 n);
+void ctx_finish(t_context *ctx);
 
 // MD5 functions / stuff
 #define MD5_DIGEST_SIZE 16

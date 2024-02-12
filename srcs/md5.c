@@ -44,15 +44,7 @@ static const u32 k[] = {
  * @param buf A sentinel-terminated buffer
  * @param n Number of bytes to eat (if > BUFFER_SIZE, the rest is dropped)
  */
-void md5_chomp(t_context *ctx, const byte *buf, u64 n) {
-    memcpy(ctx->buffer, buf, n);
-    ctx->buffer_size = n;
-    if (n < BUFFER_SIZE || (ctx->known_size != 0 && ctx->known_size == ctx->chomped_bytes + ctx->buffer_size)) {
-        // finalize the buffer
-        ctx->final_fn(ctx);
-    } else {
-    }
-
+void md5_digest(t_context *ctx) {
     // process 512-bit chunks (512 / 8 = 64)
     u32 dwords[16];
     u32 h0, h1, h2, h3, f, g, pivot, a, b, c, d;
@@ -155,10 +147,11 @@ void md5_final(t_context *ctx) {
 t_context md5_init(u64 known_size) {
     t_context new_ctx;
     new_ctx.chomped_bytes = 0;
-    new_ctx.chomp_fn = md5_chomp;
+    new_ctx.digest_fn = md5_digest;
     new_ctx.final_fn = md5_final;
     new_ctx.digest_size = MD5_DIGEST_SIZE * 4;
     new_ctx.known_size = known_size;
+    new_ctx.stream_finished = false;
     memcpy(new_ctx.digest, _md5_initial_digest, MD5_DIGEST_SIZE * 4);   
     return new_ctx;
 }

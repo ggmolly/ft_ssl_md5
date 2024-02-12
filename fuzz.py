@@ -12,7 +12,7 @@ def md5(s: str) -> str:
     return hashlib.md5(s.encode()).hexdigest()
 
 def get_hash(s: str) -> str:
-    out = subprocess.check_output(["./ft_ssl_md5", s])
+    out = subprocess.check_output(["./ft_ssl", "md5", "-s", s])
     return out.decode().strip()
 
 random_string = lambda n: ''.join(random.choices(string.ascii_letters + string.digits, k=n))
