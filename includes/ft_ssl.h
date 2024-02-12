@@ -12,6 +12,7 @@
 #define ERR_INVALID_FLAG "invalid flag"
 #define ERR_DUPLICATE_FLAG "flag specified twice"
 #define ERR_FILE_NOT_FOUND "file not found"
+#define ERR_FILE_READ_FAILED "failed to read file"
 
 // Crypto constants
 #define MAX_DIGEST_SIZE 32 // SHA-256

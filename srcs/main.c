@@ -1,5 +1,6 @@
 #include "ft_ssl.h"
 #include <fcntl.h>
+#include <unistd.h>
 
 /**
  * @brief Passes the argument to the crypto context, when -s flag is used.
@@ -40,19 +41,37 @@ void parse_arg_input(t_context *ctx, char *arg) {
  * @param path Path to the file to hash
 */
 void parse_file_input(t_context *ctx, char *path) {
-    (void) ctx;
-    (void) path;
-    return;
-    // int fd = 0; // default to stdin
-    // if (path != NULL) { // if path was specified, open the file for reading
-    //     fd = open(path, O_RDONLY);
-    // }
-    // if (fd == -1) {
-    //     printf("ft_ssl: %s: %s\n", ERR_FILE_NOT_FOUND, path);
-    //     return;
-    // }
-    // byte buffer[BUFFER_SIZE];
-    // i32 bytes_read = 0;
+    int fd = 0; // default to stdin
+    if (path != NULL) { // if path was specified, open the file for reading
+        fd = open(path, O_RDONLY);
+    }
+    if (fd == -1) {
+        printf("ft_ssl: %s: %s\n", ERR_FILE_NOT_FOUND, path);
+        return;
+    }
+    byte buffer[BUFFER_SIZE];
+    i32 bytes_read = 0;
+    // We have to know when we reach the end of the file, so we can call the final function
+    bool eof = false;
+    while (!eof) {
+        bytes_read = read(fd, buffer, BUFFER_SIZE);
+        if (bytes_read == -1) {
+            printf("ft_ssl: %s: %s\n", ERR_FILE_READ_FAILED, path);
+            return;
+        }
+        if (bytes_read < BUFFER_SIZE) {
+            eof = true;
+        }
+        ctx_chomp(ctx, buffer, bytes_read);
+        ctx->digest_fn(ctx);
+        if (eof) {
+            ctx->final_fn(ctx);
+        }
+    }
+    for (int i = 0; i < MD5_DIGEST_SIZE; i++) {
+        printf("%02x", ctx->digest[i]);
+    }
+    close(fd);
 }
 
 /**
