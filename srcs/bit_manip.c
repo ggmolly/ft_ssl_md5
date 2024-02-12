@@ -19,6 +19,6 @@ void to_bytes(u32 n, byte *output) {
  * @param bytes Pointer to a byte array of size 4
  * @return u32 The 32-bit unsigned integer
  */
-u32 to_u32(const byte *bytes) {
+inline u32 to_u32(const byte *bytes) {
     return (u32) bytes[0] | ((u32) bytes[1] << 8) | ((u32) bytes[2] << 16) | ((u32) bytes[3] << 24);
 }
