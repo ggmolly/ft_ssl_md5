@@ -16,7 +16,7 @@
 
 // Crypto constants
 #define MAX_DIGEST_SIZE 32 // SHA-256
-#define BUFFER_SIZE 4096 // will chomp 4096 bytes at a time
+#define BUFFER_SIZE 16384 // will chomp 16384 bytes at a time
 
 // Helper macros
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
