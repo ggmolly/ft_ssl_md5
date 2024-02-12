@@ -6,6 +6,7 @@ SRCS = srcs/main.c \
 		srcs/bit_manip.c \
 		srcs/md5.c \
 		srcs/context.c \
+		srcs/sha256.c \
 
 OBJS = $(SRCS:.c=.o)
 DEPS = $(SRCS:.c=.d)

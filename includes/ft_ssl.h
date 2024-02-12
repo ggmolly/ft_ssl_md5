@@ -63,9 +63,13 @@ void to_bytes(u32 n, byte *output);
 u32 to_u32(const byte *bytes);
 
 // MD5 functions / stuff
-
 #define MD5_DIGEST_SIZE 16
 
 t_context md5_init(u64 known_size);
 void md5_final(t_context *ctx);
 void md5(const byte *initial_msg, size_t initial_len, byte *digest);
+
+// SHA-256 functions / stuff
+#define SHA256_DIGEST_SIZE 32
+
+t_context sha256_init(u64 known_size);
