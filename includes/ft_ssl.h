@@ -20,6 +20,7 @@
 
 // Helper macros
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
+#define RIGHTROTATE(x, c) (((x) >> (c)) | ((x) << (32 - (c))))
 #define IS_SET(flags, flag) ((flags & flag) == flag)
 #define SET_FLAG(flags, flag) (flags |= flag)
 #define UNSET_FLAG(flags, flag) (flags &= ~flag)
@@ -52,6 +53,7 @@ typedef void (*reset_func)(struct s_context *ctx);
 
 typedef struct s_context {
     u64 chomped_bytes;                  // The number of bytes that have been processed
+    u16 block_size;                     // The size of the block that the hash function processes
     digest_func digest_fn;              // The function that consumes N bytes of the internal buffer
     final_func final_fn;                // The finalization function
     reset_func reset_fn;                // The reset function
@@ -88,11 +90,14 @@ void print_error(const char *error_message, char *details);
 // MD5 functions / stuff
 #define MD5_DIGEST_SIZE 16
 #define MD5_ALG_NAME "MD5"
+#define MD5_BLOCK_SIZE 64
+
 t_context md5_init(u64 known_size);
 void md5_final(t_context *ctx);
 void md5(const byte *initial_msg, size_t initial_len, byte *digest);
 
 // SHA-256 functions / stuff
+#define SHA256_BLOCK_SIZE 64
 #define SHA256_DIGEST_SIZE 32
 #define SHA256_ALG_NAME "SHA256"
 
