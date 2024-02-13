@@ -28,7 +28,7 @@ def fuzz(length: int = 1, mode: str = "file") -> Tuple[str, str, str, bool]:
         got = get_output(["./ft_ssl", "md5", f"./ramfs/{file_id}"])
         os.remove(f"./ramfs/{file_id}")
     elif mode == "text":
-        got = subprocess.check_output(["./ft_ssl", "md5", "-s", input]).decode().strip()
+        got = subprocess.check_output(["./ft_ssl", "md5", "-q", "-s", input]).decode().strip()
     return input, expected, got, expected == got
 
 class FuzzingThread(Thread):
