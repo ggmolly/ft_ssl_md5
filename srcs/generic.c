@@ -9,17 +9,16 @@
  * @param n Number of bytes to eat, if the number of bytes is greater than BUFFER_SIZE, automatically digests
  */
 void ctx_chomp(t_context *ctx, const byte *buf, u64 n) {
-    if (n > BUFFER_SIZE) {
-        ft_memcpy(ctx->buffer, buf, BUFFER_SIZE);
-        ctx->buffer_size = BUFFER_SIZE;
+    // if the new buffer size is greater than BUFFER_SIZE, digest the buffer
+    if (ctx->buffer_size + n > BUFFER_SIZE) {
+        u64 to_copy = BUFFER_SIZE - ctx->buffer_size;
+        ft_memcpy(ctx->buffer + ctx->buffer_size, buf, to_copy);
+        ctx->buffer_size += to_copy;
         ctx->digest_fn(ctx);
-        buf += BUFFER_SIZE;
-        n -= BUFFER_SIZE;
-        if (n > 0) {
-            ctx_chomp(ctx, buf, n);
-        }
+        ctx->buffer_size = 0;
+        ctx_chomp(ctx, buf + to_copy, n - to_copy);
     } else {
-        ft_memcpy(ctx->buffer, buf, n);
+        ft_memcpy(ctx->buffer + ctx->buffer_size, buf, n);
         ctx->buffer_size += n;
     }
 }
