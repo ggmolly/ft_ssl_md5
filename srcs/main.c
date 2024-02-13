@@ -155,9 +155,13 @@ int main(int argc, char **argv) {
     } else {
         parse_file_input(&crypto_ctx, arg);
     }
-
     unsigned char digest[MAX_DIGEST_SIZE + 1];
     ctx_hexdigest(&crypto_ctx, digest);
+    if (IS_SET(flags, FLAG_S)) {
+        printf("MD5(\"%s\")= ", arg);
+    } else {
+        printf("MD5(%s)= ", arg == NULL ? "stdin" : arg);
+    }
     printf("%s\n", digest);
     return 0;
 }

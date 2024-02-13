@@ -59,6 +59,7 @@ typedef struct s_context {
     u16 buffer_size;                    // Number of bytes in the buffer
     u64 known_size;                     // Total size of the input, 0 if unknown
     bool stream_finished;               // True if the stream has been finished (no more input)
+    char *alg_name;                     // The name of the algorithm
 } t_context;
 
 // Bit utils functions
@@ -72,12 +73,13 @@ void ctx_hexdigest(t_context *ctx, unsigned char *out);
 
 // MD5 functions / stuff
 #define MD5_DIGEST_SIZE 16
-
+#define MD5_ALG_NAME "MD5"
 t_context md5_init(u64 known_size);
 void md5_final(t_context *ctx);
 void md5(const byte *initial_msg, size_t initial_len, byte *digest);
 
 // SHA-256 functions / stuff
 #define SHA256_DIGEST_SIZE 32
+#define SHA256_ALG_NAME "SHA256"
 
 t_context sha256_init(u64 known_size);
