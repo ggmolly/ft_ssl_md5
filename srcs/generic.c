@@ -4,17 +4,23 @@
 /**
  * @brief Copies BUFFER_SIZE bytes from the buffer to internal buffer
  * 
- * @note Can mark the context as finalized if n < BUFFER_SIZE or if the known size is reached
- * 
  * @param ctx Hash context
  * @param buf A not-sentinel-terminated buffer
- * @param n Number of bytes to eat (if > BUFFER_SIZE, the rest is dropped)
+ * @param n Number of bytes to eat, if the number of bytes is greater than BUFFER_SIZE, automatically digests
  */
 void ctx_chomp(t_context *ctx, const byte *buf, u64 n) {
-    ft_memcpy(ctx->buffer, buf, n);
-    ctx->buffer_size = n;
-    if (n < BUFFER_SIZE || (ctx->known_size != 0 && ctx->known_size == ctx->chomped_bytes + ctx->buffer_size)) {
-        ctx_finish(ctx);
+    if (n > BUFFER_SIZE) {
+        ft_memcpy(ctx->buffer, buf, BUFFER_SIZE);
+        ctx->buffer_size = BUFFER_SIZE;
+        ctx->digest_fn(ctx);
+        buf += BUFFER_SIZE;
+        n -= BUFFER_SIZE;
+        if (n > 0) {
+            ctx_chomp(ctx, buf, n);
+        }
+    } else {
+        ft_memcpy(ctx->buffer, buf, n);
+        ctx->buffer_size += n;
     }
 }
 

@@ -19,6 +19,9 @@ void parse_arg_input(t_context *ctx, char *arg) {
         }
         // Copy bytes from the buffer to the internal buffer
         ctx_chomp(ctx, (byte *)arg + i, buffer_length);
+        if (ctx->chomped_bytes + buffer_length == ctx->known_size) {
+            ctx->final_fn(ctx);
+        }
         // Process the buffer
         ctx->digest_fn(ctx);
     }
@@ -63,13 +66,11 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
         if (bytes_read == -1) {
             print_error(ERR_FILE_READ_FAILED, path);
             return (false);
-        }
-        ctx_chomp(ctx, buffer, bytes_read);
-        ctx->digest_fn(ctx);
-        if (bytes_read == 0) {
+        } else if (bytes_read == 0) {
             eof = true;
-            break;
         }
+        // copy bytes from the buffer to the internal buffer
+        ctx_chomp(ctx, buffer, bytes_read);
         // if eof, or known_size is known and we have read all the bytes, or if we read less than BUFFER_SIZE, strip the last '\n' if any
         if (echo &&
             (eof || (ctx->known_size != 0 && ctx->known_size == ctx->chomped_bytes + ctx->buffer_size) || bytes_read < BUFFER_SIZE)
@@ -83,6 +84,7 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
         }
     }
     ctx->final_fn(ctx);
+    ctx->digest_fn(ctx);
     if (echo && !IS_SET(flags, FLAG_Q)) {
         write(1, "\")= ", 4);
     }
