@@ -2,7 +2,7 @@
 
 // https://en.wikipedia.org/wiki/MD5
 
-static const u32 _md5_initial_digest[MD5_DIGEST_SIZE] = {
+static const u32 _md5_initial_digest[MD5_DIGEST_SIZE / 4] = {
     0x67452301,
     0xefcdab89,
     0x98badcfe,
@@ -166,6 +166,7 @@ t_context md5_init(u64 known_size) {
     new_ctx.known_size = known_size;
     new_ctx.stream_finished = false;
     new_ctx.alg_name = MD5_ALG_NAME;
+    new_ctx.block_size = MD5_BLOCK_SIZE;
     ft_memcpy(new_ctx.digest, _md5_initial_digest, MD5_DIGEST_SIZE * 4);   
     return new_ctx;
 }
