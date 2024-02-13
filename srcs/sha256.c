@@ -50,7 +50,9 @@ void sha256_digest(t_context *ctx) {
     for (u32 offset = 0; offset < ctx->buffer_size; offset += 64) {
         // break into 16 32-bit words
         for (i32 i = 0; i < 16; i++) {
-            words[i] = to_u32((ctx->buffer + offset) + i * 4);
+            words[i] = to_u32(ctx->buffer + offset + i * 4);
+            // swap endianness
+            words[i] = (words[i] >> 24) | ((words[i] >> 8) & 0xFF00) | ((words[i] << 8) & 0xFF0000) | (words[i] << 24);
         }
 
         // extend the 16 words into 64 words
@@ -98,15 +100,6 @@ void sha256_digest(t_context *ctx) {
         h5 += f;
         h6 += g;
         h7 += h;
-
-        printf("h0: %x\n", h0);
-        printf("h1: %x\n", h1);
-        printf("h2: %x\n", h2);
-        printf("h3: %x\n", h3);
-        printf("h4: %x\n", h4);
-        printf("h5: %x\n", h5);
-        printf("h6: %x\n", h6);
-        printf("h7: %x\n", h7);
     }
     // store the result in the digest
     to_bytes(h0, ctx->digest);
@@ -118,6 +111,12 @@ void sha256_digest(t_context *ctx) {
     to_bytes(h6, ctx->digest + 24);
     to_bytes(h7, ctx->digest + 28);
     ctx->chomped_bytes += ctx->buffer_size;
+
+    // swap endianness of digest
+    for (i32 i = 0; i < 8; i++) {
+        u32 tmp = to_u32(ctx->digest + i * 4);
+        to_bytes((tmp >> 24) | ((tmp >> 8) & 0xFF00) | ((tmp << 8) & 0xFF0000) | (tmp << 24), ctx->digest + i * 4);
+    }
 }
 
 /**
@@ -143,8 +142,9 @@ void sha256_final(t_context *ctx) {
     }
     // append L as a 64-bit big-endian integer, making the total post-processed length a multiple of 512 bits
     u64 length = initial_length * 8;
-    printf("%llu\n", length);
-    to_bytes(length, ctx->buffer + ctx->buffer_size);
+    for (i32 i = 0; i < 8; i++) {
+        ctx->buffer[ctx->buffer_size + i] = (length >> (56 - i * 8)) & 0xFF;
+    }
     ctx->buffer_size += 8;
 }
 
