@@ -77,6 +77,9 @@ void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags);
 // Argument parsing
 i32 parse_parameters(int argc, char **argv, u8* flags);
 
+// Error management
+void print_error(const char *error_message, char *details);
+
 // MD5 functions / stuff
 #define MD5_DIGEST_SIZE 16
 #define MD5_ALG_NAME "MD5"

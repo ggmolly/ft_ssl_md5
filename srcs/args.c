@@ -25,12 +25,12 @@ bool parse_arg(char *arg, u8 *flags) {
             SET_FLAG(*flags, FLAG_S);
             break;
         default:
-            printf("ft_ssl: %s: '%s'\n", ERR_INVALID_FLAG, arg);
+            print_error(ERR_INVALID_FLAG, arg);
             return (false);
             break;
     }
     if (before == *flags && arg[1] != 's') {
-        printf("ft_ssl: %s: '%s'\n", ERR_DUPLICATE_FLAG, arg);
+        print_error(ERR_DUPLICATE_FLAG, arg);
         return (false);
     }
     return (true);

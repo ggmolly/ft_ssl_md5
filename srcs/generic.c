@@ -1,4 +1,5 @@
 #include "ft_ssl.h"
+#include "unistd.h"
 
 /**
  * @brief Copies BUFFER_SIZE bytes from the buffer to internal buffer
@@ -57,23 +58,45 @@ void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags) {
     unsigned char digest[ctx->digest_size * 2 + 1];
     ctx_hexdigest(ctx, digest);
     if (IS_SET(flags, FLAG_Q) || IS_SET(flags, FLAG_P)) {
-        printf("%s\n", digest);
+        write(1, digest, ctx->digest_size * 2);
+        write(1, "\n", 1);
         return ;
     }
     if (IS_SET(flags, FLAG_R)) {
         if (is_file) {
-            printf("%s %s\n", digest, arg);
+            write(1, digest, ctx->digest_size * 2);
+            write(1, " ", 1);
+            write(1, arg, strlen(arg));
+            write(1, "\n", 1);
         } else {
-            printf("%s \"%s\"\n", digest, arg);
+            write(1, digest, ctx->digest_size * 2);
+            write(1, " \"", 2);
+            write(1, arg, strlen(arg));
+            write(1, "\"\n", 2);
         }
         return ;
     } else {
         if (is_file) {
-            printf("%s(%s)= %s\n", ctx->alg_name, arg, digest);
+            write(1, arg, strlen(arg));
+            write(1, " (", 2);
+            write(1, ctx->alg_name, strlen(ctx->alg_name));
+            write(1, ") = ", 4);
+            write(1, digest, ctx->digest_size * 2);
+            write(1, "\n", 1);
         } else if (arg == NULL) {
-            printf("%s(stdin)= %s\n", ctx->alg_name, digest);
+            write(1, "(stdin) (", 8);
+            write(1, ctx->alg_name, strlen(ctx->alg_name));
+            write(1, ") = ", 4);
+            write(1, digest, ctx->digest_size * 2);
+            write(1, "\n", 1);
         } else {
-            printf("%s(\"%s\")= %s\n", ctx->alg_name, arg, digest);
+            write(1, "\"", 1);
+            write(1, arg, strlen(arg));
+            write(1, "\" (", 3);
+            write(1, ctx->alg_name, strlen(ctx->alg_name));
+            write(1, ") = ", 4);
+            write(1, digest, ctx->digest_size * 2);
+            write(1, "\n", 1);
         }
     }
 }

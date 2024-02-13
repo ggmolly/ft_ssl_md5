@@ -4,6 +4,7 @@ CFLAGS := ${INCLUDE_FLAGS} -MMD -g3 -Wall -Wextra -Werror -Ofast #-fsanitize=add
 NAME = ft_ssl
 SRCS = srcs/main.c \
 		srcs/args.c \
+		srcs/errors.c \
 		srcs/bit_manip.c \
 		srcs/generic.c \
 		srcs/md5.c \

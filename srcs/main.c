@@ -45,7 +45,7 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
         fd = open(path, O_RDONLY);
     }
     if (fd == -1) {
-        printf("ft_ssl: %s: %s\n", ERR_FILE_NOT_FOUND, path);
+        print_error(ERR_FILE_NOT_FOUND, path);
         return (false);
     }
     byte buffer[BUFFER_SIZE];
@@ -61,7 +61,7 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
     while (!eof) {
         bytes_read = read(fd, buffer, BUFFER_SIZE);
         if (bytes_read == -1) {
-            printf("ft_ssl: %s: %s\n", ERR_FILE_READ_FAILED, path);
+            print_error(ERR_FILE_READ_FAILED, path);
             return (false);
         }
         ctx_chomp(ctx, buffer, bytes_read);
@@ -96,7 +96,9 @@ char *get_next_arg(i32 argc, char **argv, i32 offset) {
 
 int main(int argc, char **argv) {
     if (argc == 1) {
-        printf("usage: %s command [flags] [file/string]", argv[0]);
+        write(2, "usage: ", 7);
+        write(2, argv[0], strlen(argv[0]));
+        write(2, " command [flags] [file/string]\n", 30);
         return (1);
     }
 
@@ -110,7 +112,7 @@ int main(int argc, char **argv) {
         flags |= FLAG_ALG_SHA256;
         crypto_ctx = sha256_init(0);
     } else {
-        printf("ft_ssl: %s: '%s'\n", ERR_ALG_NOT_FOUND, argv[1]);
+        print_error(ERR_ALG_NOT_FOUND, argv[1]);
         return (1);
     }
 
@@ -130,7 +132,7 @@ int main(int argc, char **argv) {
         // if the first argument we parse is -s
         if (i == 2 + parameters && IS_SET(flags, FLAG_S)) {
             if (next == NULL) { // no argument after -s, consider it as an error
-                printf("ft_ssl: %s: '%s'\n", ERR_INVALID_FLAG, "no string specified after -s");
+                print_error(ERR_INVALID_FLAG, "no string specified after -s");
                 return (1);
             } else {
                 parse_arg_input(&crypto_ctx, next); // pass the string to the crypto context
