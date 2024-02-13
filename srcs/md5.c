@@ -149,7 +149,7 @@ t_context md5_init(u64 known_size) {
     new_ctx.chomped_bytes = 0;
     new_ctx.digest_fn = md5_digest;
     new_ctx.final_fn = md5_final;
-    new_ctx.digest_size = MD5_DIGEST_SIZE * 4;
+    new_ctx.digest_size = MD5_DIGEST_SIZE;
     new_ctx.known_size = known_size;
     new_ctx.stream_finished = false;
     memcpy(new_ctx.digest, _md5_initial_digest, MD5_DIGEST_SIZE * 4);   
