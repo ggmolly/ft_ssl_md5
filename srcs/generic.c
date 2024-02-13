@@ -11,7 +11,7 @@
  * @param n Number of bytes to eat (if > BUFFER_SIZE, the rest is dropped)
  */
 void ctx_chomp(t_context *ctx, const byte *buf, u64 n) {
-    memcpy(ctx->buffer, buf, n);
+    ft_memcpy(ctx->buffer, buf, n);
     ctx->buffer_size = n;
     if (n < BUFFER_SIZE || (ctx->known_size != 0 && ctx->known_size == ctx->chomped_bytes + ctx->buffer_size)) {
         ctx_finish(ctx);
@@ -66,34 +66,34 @@ void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags) {
         if (is_file) {
             write(1, digest, ctx->digest_size * 2);
             write(1, " ", 1);
-            write(1, arg, strlen(arg));
+            write(1, arg, ft_strlen(arg));
             write(1, "\n", 1);
         } else {
             write(1, digest, ctx->digest_size * 2);
             write(1, " \"", 2);
-            write(1, arg, strlen(arg));
+            write(1, arg, ft_strlen(arg));
             write(1, "\"\n", 2);
         }
         return ;
     } else {
         if (is_file) {
-            write(1, arg, strlen(arg));
+            write(1, arg, ft_strlen(arg));
             write(1, " (", 2);
-            write(1, ctx->alg_name, strlen(ctx->alg_name));
+            write(1, ctx->alg_name, ft_strlen(ctx->alg_name));
             write(1, ") = ", 4);
             write(1, digest, ctx->digest_size * 2);
             write(1, "\n", 1);
         } else if (arg == NULL) {
             write(1, "(stdin) (", 8);
-            write(1, ctx->alg_name, strlen(ctx->alg_name));
+            write(1, ctx->alg_name, ft_strlen(ctx->alg_name));
             write(1, ") = ", 4);
             write(1, digest, ctx->digest_size * 2);
             write(1, "\n", 1);
         } else {
             write(1, "\"", 1);
-            write(1, arg, strlen(arg));
+            write(1, arg, ft_strlen(arg));
             write(1, "\" (", 3);
-            write(1, ctx->alg_name, strlen(ctx->alg_name));
+            write(1, ctx->alg_name, ft_strlen(ctx->alg_name));
             write(1, ") = ", 4);
             write(1, digest, ctx->digest_size * 2);
             write(1, "\n", 1);

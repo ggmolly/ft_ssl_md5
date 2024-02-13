@@ -5,6 +5,7 @@ NAME = ft_ssl
 SRCS = srcs/main.c \
 		srcs/args.c \
 		srcs/errors.c \
+		srcs/ft_utils.c \
 		srcs/bit_manip.c \
 		srcs/generic.c \
 		srcs/md5.c \

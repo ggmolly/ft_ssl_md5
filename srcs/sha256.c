@@ -17,6 +17,6 @@ t_context sha256_init(u64 known_size) {
     new_ctx.final_fn = NULL;
     new_ctx.digest_size = SHA256_DIGEST_SIZE * 4;
     new_ctx.known_size = known_size;
-    //memcpy(new_ctx.digest, _md5_initial_digest, MD5_DIGEST_SIZE * 4);   
+    //ft_memcpy(new_ctx.digest, _md5_initial_digest, MD5_DIGEST_SIZE * 4);   
     return new_ctx;
 }

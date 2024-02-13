@@ -74,6 +74,11 @@ void ctx_finish(t_context *ctx);
 void ctx_hexdigest(t_context *ctx, unsigned char *out);
 void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags);
 
+// hehe funny ft functions :^)
+i32 ft_strlen(const char *s);
+i32 ft_strncmp(const char *s1, const char *s2, u64 n);
+void *ft_memcpy(void *dest, const void *src, u64 n);
+
 // Argument parsing
 i32 parse_parameters(int argc, char **argv, u8* flags);
 

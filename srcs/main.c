@@ -11,7 +11,7 @@
  * @param arg 
  */
 void parse_arg_input(t_context *ctx, char *arg) {
-    ctx->known_size = strlen(arg);
+    ctx->known_size = ft_strlen(arg);
     for (u64 i = 0; i < ctx->known_size; i += BUFFER_SIZE) {
         i32 buffer_length = ctx->known_size - i;
         if (buffer_length > BUFFER_SIZE) {
@@ -97,7 +97,7 @@ char *get_next_arg(i32 argc, char **argv, i32 offset) {
 int main(int argc, char **argv) {
     if (argc == 1) {
         write(2, "usage: ", 7);
-        write(2, argv[0], strlen(argv[0]));
+        write(2, argv[0], ft_strlen(argv[0]));
         write(2, " command [flags] [file/string]\n", 30);
         return (1);
     }
@@ -105,10 +105,10 @@ int main(int argc, char **argv) {
     u8 flags = 0;
     t_context crypto_ctx;
 
-    if (strncmp(argv[1], "md5\0", 4) == 0) {
+    if (ft_strncmp(argv[1], "md5\0", 4) == 0) {
         flags |= FLAG_ALG_MD5;
         crypto_ctx = md5_init(0);
-    } else if (strncmp(argv[1], "sha256\0", 7) == 0) {
+    } else if (ft_strncmp(argv[1], "sha256\0", 7) == 0) {
         flags |= FLAG_ALG_SHA256;
         crypto_ctx = sha256_init(0);
     } else {
