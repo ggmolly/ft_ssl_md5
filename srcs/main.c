@@ -124,7 +124,6 @@ int main(int argc, char **argv) {
     if (IS_SET(flags, FLAG_P)) {
         parse_file_input(&crypto_ctx, NULL, flags);
         ctx_print_digest(&crypto_ctx, NULL, false, flags);
-        UNSET_FLAG(flags, FLAG_P);
     }
 
     // Consider the rest of the arguments as files, except -s and the following argument
@@ -149,7 +148,7 @@ int main(int argc, char **argv) {
     }
 
     // If no arguments were passed, read from stdin
-    if (argc == 2 + parameters) {
+    if (argc == 2 + parameters && !IS_SET(flags, FLAG_P)) {
         parse_file_input(&crypto_ctx, NULL, flags);
         ctx_print_digest(&crypto_ctx, NULL, false, flags);
     }

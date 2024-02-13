@@ -90,9 +90,7 @@ void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags) {
             write(1, digest, ctx->digest_size * 2);
             write(1, "\n", 1);
         } else if (arg == NULL) {
-            write(1, "(stdin) (", 8);
-            write(1, ctx->alg_name, ft_strlen(ctx->alg_name));
-            write(1, ") = ", 4);
+            write(1, "(stdin)= ", 9);
             write(1, digest, ctx->digest_size * 2);
             write(1, "\n", 1);
         } else {
