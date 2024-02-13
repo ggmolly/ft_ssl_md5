@@ -2,6 +2,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+char *strrnchr(char *haybale, char needle, u32 size, i32 look_behind) {
+    for (i32 i = size - 1; i >= 0; i--) {
+        if (haybale[i] == needle) {
+            return (haybale + i);
+        }
+        if (i < look_behind) {
+            return (NULL);
+        }
+    }
+    return (NULL);
+}
+
 /**
  * @brief Passes the argument to the crypto context, when -s flag is used.
  * 
@@ -35,72 +47,63 @@ void parse_arg_input(t_context *ctx, char *arg) {
  * 
  * @param ctx Crypto context (contains the hash function)
  * @param path Path to the file to hash
+ * @param flags If `-p` is true and path is NULL, will echo stdin to stdout
+ * 
+ * @return true File was read successfully, false otherwise
 */
-void parse_file_input(t_context *ctx, char *path) {
+bool parse_file_input(t_context *ctx, char *path, u8 flags) {
     int fd = 0; // default to stdin
     if (path != NULL) { // if path was specified, open the file for reading
         fd = open(path, O_RDONLY);
     }
     if (fd == -1) {
         printf("ft_ssl: %s: %s\n", ERR_FILE_NOT_FOUND, path);
-        return;
+        return (false);
     }
     byte buffer[BUFFER_SIZE];
     i32 bytes_read = 0;
     // We have to know when we reach the end of the file, so we can call the final function
     bool eof = false;
+    bool echo = false;
+    // If -p is set, and path is NULL, echo stdin to stdout
+    echo = IS_SET(flags, FLAG_P) && path == NULL;
+    if (echo && !IS_SET(flags, FLAG_Q)) {
+        write(1, "(\"", 2);
+    }
     while (!eof) {
         bytes_read = read(fd, buffer, BUFFER_SIZE);
         if (bytes_read == -1) {
             printf("ft_ssl: %s: %s\n", ERR_FILE_READ_FAILED, path);
-            return;
-        }
-        if (bytes_read < BUFFER_SIZE) {
-            eof = true;
+            return (false);
         }
         ctx_chomp(ctx, buffer, bytes_read);
         ctx->digest_fn(ctx);
-        if (eof) {
-            ctx->final_fn(ctx);
+        if (bytes_read == 0) {
+            eof = true;
+            break;
+        }
+        // if eof, or known_size is known and we have read all the bytes, or if we read less than BUFFER_SIZE, strip the last '\n' if any
+        if (echo &&
+            (eof || (ctx->known_size != 0 && ctx->known_size == ctx->chomped_bytes + ctx->buffer_size) || bytes_read < BUFFER_SIZE)
+        ) {
+            if (buffer[bytes_read-1] == '\n' && !IS_SET(flags, FLAG_Q)) {
+                bytes_read--;
+            }
+        }
+        if (echo) {
+            write(1, buffer, bytes_read);
         }
     }
+    ctx->final_fn(ctx);
+    if (echo && !IS_SET(flags, FLAG_Q)) {
+        write(1, "\")= ", 4);
+    }
     close(fd);
+    return (true);
 }
 
-/**
- * @brief Parse the argument in the command line, and set the flags accordingly.
- * 
- * @param arg Argument to parse
- * @param flags Format bitmask
- * @return true Argument was parsed successfully
- * @return false An error occurred
- */
-bool parse_arg(char *arg, u8 *flags) {
-    u8 before = *flags;
-    switch (arg[1])
-    {
-        case 'p':
-            SET_FLAG(*flags, FLAG_P);
-            break;
-        case 'q':
-            SET_FLAG(*flags, FLAG_Q);
-            break;
-        case 'r':
-            SET_FLAG(*flags, FLAG_R);
-            break;
-        case 's':
-            SET_FLAG(*flags, FLAG_S);
-            break;
-        default:
-            printf("ft_ssl: %s: '%s'\n", ERR_INVALID_FLAG, arg);
-            return (false);
-            break;
-    }
-    if (before == *flags) {
-        printf("ft_ssl: %s: '%s'\n", ERR_DUPLICATE_FLAG, arg);
-        return (false);
-    }
-    return (true);
+char *get_next_arg(i32 argc, char **argv, i32 offset) {
+    return (offset < argc ? argv[offset] : NULL);
 }
 
 int main(int argc, char **argv) {
@@ -111,7 +114,6 @@ int main(int argc, char **argv) {
 
     u8 flags = 0;
     t_context crypto_ctx;
-    char *arg = NULL;
 
     if (strncmp(argv[1], "md5\0", 4) == 0) {
         flags |= FLAG_ALG_MD5;
@@ -124,44 +126,40 @@ int main(int argc, char **argv) {
         return (1);
     }
 
-    for (i32 i = 2; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            parse_arg(argv[i], &flags);
-        } else { // isn't a flag, nor a command, must be the file or string to hash
-            if (arg != NULL) {
-                printf("ft_ssl: %s: '%s'\n", ERR_INVALID_FLAG, argv[i]);
+    i32 parameters = parse_parameters(argc, argv, &flags);
+
+    // if -p was passed, read from stdin, or if only parameters were passed, read from stdin
+    if (IS_SET(flags, FLAG_P)) {
+        parse_file_input(&crypto_ctx, NULL, flags);
+        ctx_print_digest(&crypto_ctx, NULL, false, flags);
+        UNSET_FLAG(flags, FLAG_P);
+    }
+
+    // Consider the rest of the arguments as files, except -s and the following argument
+    for (i32 i = 2 + parameters; i < argc; i++) {
+        crypto_ctx.reset_fn(&crypto_ctx);
+        char *next = get_next_arg(argc, argv, i+1);
+        // if the first argument we parse is -s
+        if (i == 2 + parameters && IS_SET(flags, FLAG_S)) {
+            if (next == NULL) { // no argument after -s, consider it as an error
+                printf("ft_ssl: %s: '%s'\n", ERR_INVALID_FLAG, "no string specified after -s");
                 return (1);
+            } else {
+                parse_arg_input(&crypto_ctx, next); // pass the string to the crypto context
+                i++;
             }
-            arg = argv[i];
+        } else if (!parse_file_input(&crypto_ctx, argv[i], flags)) { // whatever the next argument is, it will be interpreted as a string
+            continue; // skip to the next input, the error message has already been printed
         }
+        // Print the digest & unset -s
+        ctx_print_digest(&crypto_ctx, IS_SET(flags, FLAG_S) ? next : argv[i], !IS_SET(flags, FLAG_S), flags);
+        UNSET_FLAG(flags, FLAG_S);
     }
 
-    if (!IS_SET(flags, FLAG_ALG_MD5) && !IS_SET(flags, FLAG_ALG_SHA256)) {
-        if (arg == NULL) {
-            printf("ft_ssl: %s: no algorithm specified\n", ERR_INVALID_FLAG);
-            return (1);
-        } else {
-            printf("ft_ssl: %s: '%s'\n", ERR_ALG_NOT_FOUND, arg);
-            return (1);
-        }
+    // If no arguments were passed, read from stdin
+    if (argc == 2 + parameters) {
+        parse_file_input(&crypto_ctx, NULL, flags);
+        ctx_print_digest(&crypto_ctx, NULL, false, flags);
     }
-
-    if (IS_SET(flags, FLAG_S)) {
-        if (arg == NULL) {
-            printf("ft_ssl: %s: -s flag requires an argument\n", ERR_INVALID_FLAG);
-            return (1);
-        }
-        parse_arg_input(&crypto_ctx, arg);
-    } else {
-        parse_file_input(&crypto_ctx, arg);
-    }
-    unsigned char digest[MAX_DIGEST_SIZE + 1];
-    ctx_hexdigest(&crypto_ctx, digest);
-    if (IS_SET(flags, FLAG_S)) {
-        printf("MD5(\"%s\")= ", arg);
-    } else {
-        printf("MD5(%s)= ", arg == NULL ? "stdin" : arg);
-    }
-    printf("%s\n", digest);
     return 0;
 }

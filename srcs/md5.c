@@ -135,6 +135,18 @@ void md5_final(t_context *ctx) {
 }
 
 /**
+ * @brief Resets the context to its initial state
+ * 
+ * @param ctx Hash context
+ */
+void md5_reset(t_context *ctx) {
+    ctx->chomped_bytes = 0;
+    ctx->stream_finished = false;
+    ctx->buffer_size = 0;
+    memcpy(ctx->digest, _md5_initial_digest, MD5_DIGEST_SIZE * 4);
+}
+
+/**
  * @brief Returns a new context for the MD5 hash function
  * 
  * @note Initialize the digest to :
@@ -149,6 +161,7 @@ t_context md5_init(u64 known_size) {
     new_ctx.chomped_bytes = 0;
     new_ctx.digest_fn = md5_digest;
     new_ctx.final_fn = md5_final;
+    new_ctx.reset_fn = md5_reset;
     new_ctx.digest_size = MD5_DIGEST_SIZE;
     new_ctx.known_size = known_size;
     new_ctx.stream_finished = false;

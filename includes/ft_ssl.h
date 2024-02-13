@@ -37,6 +37,7 @@ struct s_context;
 
 typedef void (*digest_func)(struct s_context *ctx);
 typedef void (*final_func)(struct s_context *ctx);
+typedef void (*reset_func)(struct s_context *ctx);
 
 /*
     A context is a structure that holds the state of the hash function.
@@ -53,6 +54,7 @@ typedef struct s_context {
     u64 chomped_bytes;                  // The number of bytes that have been processed
     digest_func digest_fn;              // The function that consumes N bytes of the internal buffer
     final_func final_fn;                // The finalization function
+    reset_func reset_fn;                // The reset function
     byte digest[MAX_DIGEST_SIZE * 4];   // The final hash value -> will be initialized depending on the hash function
     u8 digest_size;                     // The size of the digest, we have to know it to not overflow the digest buffer :^)
     byte buffer[BUFFER_SIZE+128];       // The buffer that holds the input + space for padding
@@ -70,6 +72,10 @@ u32 to_u32(const byte *bytes);
 void ctx_chomp(t_context *ctx, const byte *buf, u64 n);
 void ctx_finish(t_context *ctx);
 void ctx_hexdigest(t_context *ctx, unsigned char *out);
+void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags);
+
+// Argument parsing
+i32 parse_parameters(int argc, char **argv, u8* flags);
 
 // MD5 functions / stuff
 #define MD5_DIGEST_SIZE 16
