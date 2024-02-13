@@ -2,18 +2,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-char *strrnchr(char *haybale, char needle, u32 size, i32 look_behind) {
-    for (i32 i = size - 1; i >= 0; i--) {
-        if (haybale[i] == needle) {
-            return (haybale + i);
-        }
-        if (i < look_behind) {
-            return (NULL);
-        }
-    }
-    return (NULL);
-}
-
 /**
  * @brief Passes the argument to the crypto context, when -s flag is used.
  * 
