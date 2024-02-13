@@ -68,9 +68,9 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
             return (false);
         } else if (bytes_read == 0) {
             eof = true;
+        } else {
+            ctx_chomp(ctx, buffer, bytes_read);
         }
-        // copy bytes from the buffer to the internal buffer
-        ctx_chomp(ctx, buffer, bytes_read);
         // if eof, or known_size is known and we have read all the bytes, or if we read less than BUFFER_SIZE, strip the last '\n' if any
         if (echo &&
             (eof || (ctx->known_size != 0 && ctx->known_size == ctx->chomped_bytes + ctx->buffer_size) || bytes_read < BUFFER_SIZE)
