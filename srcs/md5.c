@@ -143,7 +143,7 @@ void md5_reset(t_context *ctx) {
     ctx->chomped_bytes = 0;
     ctx->stream_finished = false;
     ctx->buffer_size = 0;
-    ft_memcpy(ctx->digest, _md5_initial_digest, MD5_DIGEST_SIZE * 4);
+    ft_memcpy(ctx->digest, _md5_initial_digest, MD5_DIGEST_SIZE);
 }
 
 /**
@@ -163,10 +163,10 @@ t_context md5_init(u64 known_size) {
     new_ctx.final_fn = md5_final;
     new_ctx.reset_fn = md5_reset;
     new_ctx.digest_size = MD5_DIGEST_SIZE;
+    new_ctx.buffer_size = 0;
     new_ctx.known_size = known_size;
     new_ctx.stream_finished = false;
     new_ctx.alg_name = MD5_ALG_NAME;
-    new_ctx.block_size = MD5_BLOCK_SIZE;
-    ft_memcpy(new_ctx.digest, _md5_initial_digest, MD5_DIGEST_SIZE * 4);   
+    ft_memcpy(new_ctx.digest, _md5_initial_digest, MD5_DIGEST_SIZE);   
     return new_ctx;
 }

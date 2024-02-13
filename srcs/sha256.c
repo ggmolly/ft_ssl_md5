@@ -47,7 +47,7 @@ void sha256_digest(t_context *ctx) {
     h6 = to_u32(ctx->digest + 24);
     h7 = to_u32(ctx->digest + 28);
 
-    for (u32 offset = 0; offset < ctx->buffer_size; offset += 64) {
+    for (u32 offset = 0; offset + 64 <= ctx->buffer_size; offset += 64) {
         // break into 16 32-bit words
         for (i32 i = 0; i < 16; i++) {
             words[i] = to_u32(ctx->buffer + offset + i * 4);
@@ -158,7 +158,7 @@ void sha256_reset(t_context *ctx) {
     ctx->chomped_bytes = 0;
     ctx->stream_finished = false;
     ctx->buffer_size = 0;
-    ft_memcpy(ctx->digest, _sha256_initial_digest, MD5_DIGEST_SIZE * 4);
+    ft_memcpy(ctx->digest, _sha256_initial_digest, SHA256_DIGEST_SIZE);
 }
 
 /**
@@ -182,6 +182,6 @@ t_context sha256_init(u64 known_size) {
     new_ctx.stream_finished = false;
     new_ctx.alg_name = SHA256_ALG_NAME;
     new_ctx.known_size = known_size;
-    ft_memcpy(new_ctx.digest, _sha256_initial_digest, SHA256_DIGEST_SIZE * 4);
+    ft_memcpy(new_ctx.digest, _sha256_initial_digest, SHA256_DIGEST_SIZE);
     return new_ctx;
 }
