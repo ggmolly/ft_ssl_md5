@@ -155,5 +155,9 @@ int main(int argc, char **argv) {
     } else {
         parse_file_input(&crypto_ctx, arg);
     }
+
+    unsigned char digest[MAX_DIGEST_SIZE + 1];
+    ctx_hexdigest(&crypto_ctx, digest);
+    printf("%s\n", digest);
     return 0;
 }

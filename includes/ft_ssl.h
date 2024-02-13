@@ -68,6 +68,7 @@ u32 to_u32(const byte *bytes);
 // Generic functions / stuff
 void ctx_chomp(t_context *ctx, const byte *buf, u64 n);
 void ctx_finish(t_context *ctx);
+void ctx_hexdigest(t_context *ctx, unsigned char *out);
 
 // MD5 functions / stuff
 #define MD5_DIGEST_SIZE 16

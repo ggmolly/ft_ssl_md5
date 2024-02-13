@@ -29,3 +29,19 @@ void ctx_finish(t_context *ctx) {
     ctx->stream_finished = true;
     ctx->final_fn(ctx);
 }
+
+/**
+ * @brief Writes the digest to an output buffer, must be at least ctx->digest_size bytes long
+ * 
+ * @note The buffer is not null-terminated
+ * 
+ * @param ctx Hash context
+ * @param out Output buffer
+ */
+void ctx_hexdigest(t_context *ctx, unsigned char *out) {
+    for (u64 i = 0; i < ctx->digest_size; i++) {
+        out[i * 2] = "0123456789abcdef"[ctx->digest[i] >> 4];
+        out[i * 2 + 1] = "0123456789abcdef"[ctx->digest[i] & 0x0F];
+    }
+    out[ctx->digest_size * 2] = '\0';
+}
