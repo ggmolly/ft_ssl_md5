@@ -53,7 +53,6 @@ typedef void (*reset_func)(struct s_context *ctx);
 
 typedef struct s_context {
     u64 chomped_bytes;                  // The number of bytes that have been processed
-    u16 block_size;                     // The size of the block that the hash function processes
     digest_func digest_fn;              // The function that consumes N bytes of the internal buffer
     final_func final_fn;                // The finalization function
     reset_func reset_fn;                // The reset function
