@@ -26,10 +26,6 @@ void parse_arg_input(t_context *ctx, char *arg) {
         ctx->buffer_size = 0;
         ctx->final_fn(ctx);
     }
-
-    for (int i = 0; i < MD5_DIGEST_SIZE; i++) {
-        printf("%02x", ctx->digest[i]);
-    }
 }
 
 /**
@@ -67,9 +63,6 @@ void parse_file_input(t_context *ctx, char *path) {
         if (eof) {
             ctx->final_fn(ctx);
         }
-    }
-    for (int i = 0; i < MD5_DIGEST_SIZE; i++) {
-        printf("%02x", ctx->digest[i]);
     }
     close(fd);
 }
