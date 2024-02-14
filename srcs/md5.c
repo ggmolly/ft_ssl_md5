@@ -104,7 +104,6 @@ void md5_digest(t_context *ctx) {
     to_bytes(h1, ctx->digest + 4);
     to_bytes(h2, ctx->digest + 8);
     to_bytes(h3, ctx->digest + 12);
-    ctx->chomped_bytes += ctx->buffer_size;
 }
 
 /**
@@ -119,7 +118,7 @@ void md5_digest(t_context *ctx) {
  */
 void md5_final(t_context *ctx) {
     // append 1-bit
-    u32 initial_length = ctx->chomped_bytes + ctx->buffer_size;
+    u32 initial_length = ctx->chomped_bytes;
     ctx->buffer[ctx->buffer_size++] = 0b10000000;
     u32 msg_length = ctx->buffer_size;
     // pad with 0s to make the message congruent to 448 (mod 512)
@@ -132,6 +131,7 @@ void md5_final(t_context *ctx) {
     to_bytes(initial_length << 3, ctx->buffer + ctx->buffer_size);
     to_bytes(initial_length >> (32-3), ctx->buffer + ctx->buffer_size + 4);
     ctx->buffer_size += 8;
+    ctx->digest_fn(ctx);
 }
 
 /**
