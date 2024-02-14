@@ -1,0 +1,50 @@
+name: Fuzzing
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4.1.1
+
+    - name: Set up Python 3
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.x
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc build-essential make
+
+    - name: Compile the project
+      run: make
+
+    - name: Fuzzing MD5 on text arguments (-s)
+      run: |
+        python3 fuzz.py md5 text tiny
+    
+    - name: Fuzzing MD5 on file arguments
+      run: |
+        python3 fuzz.py md5 file tiny
+
+    - name: Fuzzing MD5 on bigger files
+      run: |
+        python3 fuzz.py md5 huge_file tiny
+
+    - name: Fuzzing SHA256 on text arguments (-s)
+      run: |
+        python3 fuzz.py sha256 text tiny
+    
+    - name: Fuzzing SHA256 on file arguments
+      run: |
+        python3 fuzz.py sha256 file tiny
+
+    - name: Fuzzing SHA256 on bigger files
+      run: |
+        python3 fuzz.py sha256 huge_file tiny
