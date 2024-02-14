@@ -78,7 +78,7 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
         if (echo &&
             (eof || (ctx->known_size != 0 && ctx->known_size == ctx->chomped_bytes + ctx->buffer_size) || bytes_read < BUFFER_SIZE)
         ) {
-            if (buffer[bytes_read-1] == '\n' && IS_SET(flags, FLAG_P)) {
+            if (buffer[bytes_read-1] == '\n' && IS_SET(flags, FLAG_P) && !IS_SET(flags, FLAG_Q)) {
                 bytes_read--;
             }
         }
@@ -142,6 +142,11 @@ int main(int argc, char **argv) {
     if (IS_SET(flags, FLAG_P)) {
         parse_file_input(&crypto_ctx, NULL, flags);
         ctx_print_digest(&crypto_ctx, NULL, false, flags);
+    }
+
+    // -q cancels -r
+    if (IS_SET(flags, FLAG_Q)) {
+        UNSET_FLAG(flags, FLAG_R);
     }
 
     // Consider the rest of the arguments as files, except -s and the following arguments
