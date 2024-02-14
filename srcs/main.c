@@ -87,7 +87,7 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
     }
     ctx->final_fn(ctx);
     if (echo && !IS_SET(flags, FLAG_Q)) {
-        write(1, "\")= ", 4);
+        write(1, "\") = ", 5);
     }
     close(fd);
     return (true);
