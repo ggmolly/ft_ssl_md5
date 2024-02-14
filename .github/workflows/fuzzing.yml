@@ -27,24 +27,24 @@ jobs:
 
     - name: Fuzzing MD5 on text arguments (-s)
       run: |
-        python3 fuzz.py md5 text tiny
+        python3 fuzz.py md5 text medium
     
     - name: Fuzzing MD5 on file arguments
       run: |
-        python3 fuzz.py md5 file tiny
+        python3 fuzz.py md5 file medium
 
     - name: Fuzzing MD5 on bigger files
       run: |
-        python3 fuzz.py md5 huge_file tiny
+        python3 fuzz.py md5 huge_file medium
 
     - name: Fuzzing SHA256 on text arguments (-s)
       run: |
-        python3 fuzz.py sha256 text tiny
+        python3 fuzz.py sha256 text medium
     
     - name: Fuzzing SHA256 on file arguments
       run: |
-        python3 fuzz.py sha256 file tiny
+        python3 fuzz.py sha256 file medium
 
     - name: Fuzzing SHA256 on bigger files
       run: |
-        python3 fuzz.py sha256 huge_file tiny
+        python3 fuzz.py sha256 huge_file medium
