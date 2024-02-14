@@ -8,6 +8,10 @@ static const t_algorithm algorithms[] = {
     {NULL, NULL, 0}
 };
 
+static const char* valid_flags[] = {
+    "-p", "-q", "-r", "-s"
+};
+
 /**
  * @brief Passes the argument to the crypto context, when -s flag is used.
  * 
@@ -102,6 +106,7 @@ int main(int argc, char **argv) {
     }
     u8 flags = 0;
     t_context crypto_ctx;
+    crypto_ctx.alg_name = NULL;
 
     // Find the algorithm that corresponds to the first argument
     for (i32 i = 0; algorithms[i].name != NULL; i++) {
@@ -114,7 +119,19 @@ int main(int argc, char **argv) {
 
     // if no algorithm was found, print an error and return
     if (crypto_ctx.alg_name == NULL) {
-        print_error(ERR_ALG_NOT_FOUND, argv[1]);
+        write(2, "ft_ssl: Error: '", 16);
+        write(2, argv[1], ft_strlen(argv[1]));
+        write(2, "' is an invalid command.\n\nCommands:\n", 36);
+        for (i32 i = 0; algorithms[i].name != NULL; i++) {
+            write(2, algorithms[i].name, ft_strlen(algorithms[i].name));
+            write(2, "\n", 1);
+        }
+        write(2, "\nFlags:\n", 8);
+        for (i32 i = 0; i < 4; i++) {
+            write(2, valid_flags[i], ft_strlen(valid_flags[i]));
+            write(2, " ", 1);
+        }
+        write(2, "\n", 1);
         return (1);
     }
 
