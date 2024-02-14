@@ -4,11 +4,42 @@ import hashlib
 import subprocess
 import os
 import sys
+import argparse
 from uuid import uuid4
 from typing import Tuple
 from threading import Thread, Lock
 
+class FuzzingError(Exception):
+    pass
+
+CORPUSES = {
+    "tiny": {
+        "text": range(1, 65535, 72),
+        "file": range(1, 65535, 1024),
+        "huge_file": [1e6],
+    },
+    "small": {
+        "text": range(1, 65535, 16),
+        "file": range(1, 65535, 256),
+        "huge_file": [1e3, 1e4, 1e5],
+    },
+    "medium": {
+        "text": range(1, 65535, 8),
+        "file": range(1, 65535, 64),
+        "huge_file": [1e3, 1e4, 1e5, 1e6, 1e7],
+    },
+    "all": {
+        "text": range(1, 65535, 1),
+        "file": range(1, 65535, 1),
+        "huge_file": [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9],
+    },
+}
+
+TEXT_CORPUS_MAX = 65535
+FILE_CORPUS = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
+
 PRINT_LOCK = Lock()
+ERROR_LOCK = Lock()
 
 def md5(s: str) -> str:
     return hashlib.md5(s.encode()).hexdigest()
@@ -18,39 +49,104 @@ def sha256(s: str) -> str:
 
 random_string = lambda n: ''.join(random.choices(string.ascii_letters + string.digits, k=n))
 
-def get_output(args: list) -> str:
-    return subprocess.check_output(args).decode().strip()
+def get_output(args: list) -> Tuple[str, bool]:
+    """
+    returns the output, and whether it got killed by a signal or timed out
+    timeout is 30s
+    """
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        out, _ = p.communicate(timeout=30)
+        return out.decode().strip(), p.returncode < 0
+    except subprocess.TimeoutExpired:
+        p.kill()
+        return "", True
 
-def fuzz(length: int = 1, mode: str = "file", alg: str = "md5") -> Tuple[str, str, str, bool]:
-    input = random_string(length)
-    expected = md5(input) if alg == "md5" else sha256(input)
-    if mode == "file":
-        file_id = str(uuid4())
-        with open(f"./ramfs/{file_id}", "w") as f:
-            f.write(input)
-        got = get_output(["./ft_ssl", alg, "-q", f"./ramfs/{file_id}"])
-        os.remove(f"./ramfs/{file_id}")
+def fuzz(args: list, mode: str = "file", alg: str = "md5") -> Tuple[str, str, str, bool, bool]:
+    base_args = ["./ft_ssl", alg, "-q"]
+    base_args.extend(args) # contains -s '..' or just the file path
+    if "file" in mode:
+        our, crashed = get_output(base_args)
+        their, _ = get_output(["md5sum" if alg == "md5" else "sha256sum", args[-1]])
+        their = their.split()[0]
+        return args[-1], their, our, their == our, crashed
     elif mode == "text":
-        got = subprocess.check_output(["./ft_ssl", alg, "-q", "-s", input]).decode().strip()
-    return input, expected, got, expected == got
+        our, crashed = get_output(base_args)
+        their = md5(args[-1]) if alg == "md5" else sha256(args[-1])
+        return args[-1], their, our, their == our, crashed
 
 class FuzzingThread(Thread):
-    def __init__(self, length: int, mode: str = "text", alg: str = "md5"):
+    def __init__(self,
+            mode: str = "text",
+            alg: str = "md5",
+            corpus: list = [], # list of generators
+        ):
         global PRINT_LOCK
         super().__init__()
-        self.length = length
         self.print_lock = PRINT_LOCK
         self.mode = mode
         self.alg = alg
-    def run(self):
-        input, expected, got, equal = fuzz(self.length, mode=self.mode, alg=self.alg)
-        with self.print_lock:
-            if equal:
-                print(f"[fuzz] length={str(self.length).ljust(5)}/65535, {expected} == {got} -> OK", end="\r", flush=True)
-            else:
-                print(f"[fuzz] length={str(self.length).ljust(5)}/65535, {expected} != {got} -> KO [{input}]", flush=True, file=sys.stderr)
-                exit(1)
+        self.corpus = corpus
 
+    def create_file(self, length: int) -> str:
+        file_id = str(uuid4())
+        content = random_string(length)
+        path = f"./ramfs/{file_id}"
+        with open(path, "w") as f:
+            f.write(content)
+        return path
+
+    def run(self):
+        for length in self.corpus:
+            if self.mode == "text":
+                input, expected, got, equal, crashed = fuzz(
+                    ["-s", random_string(length)],
+                    mode=self.mode,
+                    alg=self.alg
+                )
+            else:
+                length = int(length)
+                path = self.create_file(length)
+                input, expected, got, equal, crashed = fuzz(
+                    [path],
+                    mode=self.mode,
+                    alg=self.alg
+                )
+                os.remove(path)
+            with self.print_lock:
+                # get first 20 bytes of input and 32 bytes of output
+                trimmed_input = input if len(input) <= 20 else f"{input[:20]}... ({len(input)} bytes)"
+                trimmed_output = got if len(got) <= 32 else f"{got[:32]}... ({len(got)} bytes)"
+                if crashed:
+                    print(f"[!] length={str(length).ljust(5)}/65535, crashed [{trimmed_input}]")
+                    exit(1)
+                if not equal:
+                    print(f"[!] length={str(length).ljust(5)}/65535, {expected} != {trimmed_output} -> KO [{trimmed_input}]")
+                    exit(1)
+
+def run_fuzzer(chunked_corpus: list, mode: str = "text", alg: str = "md5"):
+    threads = []
+    for corpus in chunked_corpus:
+        threads.append(FuzzingThread(mode=mode, alg=alg, corpus=corpus))
+    try:
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    except KeyboardInterrupt:
+        print("\n[!] interrupted by user")
+        exit(0)
+    except:
+        exit(2)
+
+
+def _corpus_chunk(corpus: list) -> list:
+    """returns a chunk of the corpus to be used by the fuzzing threads"""
+    chunk_size = os.cpu_count()
+    chunk = []
+    for i in range(0, len(corpus), chunk_size):
+        chunk.append(corpus[i:i+chunk_size])
+    return chunk
 
 if __name__ == "__main__":
     try:
@@ -58,36 +154,16 @@ if __name__ == "__main__":
     except:
         print("[!] compilation failed")
         exit(1)
-    if len(sys.argv) != 3:# or sys.argv[1] not in ["text", "file", "huge_file"]:
-        print(f"Usage: {sys.argv[0]} [md5|sha256] [text|file|huge_file]")
-        exit(1)
-    if sys.argv[2] == "file" or sys.argv[2] == "huge_file":
+    args = argparse.ArgumentParser()
+    args.add_argument("alg", choices=["md5", "sha256"])
+    args.add_argument("mode", choices=["text", "file", "huge_file"])
+    args.add_argument("corpus", choices=CORPUSES.keys(), nargs="?", default="all")
+    args = args.parse_args()
+
+    selected_corpus = sys.argv[3] if len(sys.argv) > 3 else "all"
+
+    if any([sys.argv[2] == "file", sys.argv[2] == "huge_file"]):
         assert os.path.exists("./ramfs"), "ramfs not found, please create it using itempotent_ramfs.sh"
-    if sys.argv[2] != "huge_file":
-        for length in range(1, 65535, os.cpu_count()):
-            threads = []
-            for i in range(length, length+os.cpu_count()):
-                threads.append(FuzzingThread(i, mode=sys.argv[2], alg=sys.argv[1]))
-            try:
-                for t in threads:
-                    t.start()
-                for t in threads:
-                    t.join()
-            except KeyboardInterrupt:
-                print("\n[!] interrupted by user")
-                exit(0)
-    else:
-        lengths = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
-        lengths = [int(i) for i in lengths]
-        for length in lengths:
-            with open(f"./ramfs/{length}", "w") as f:
-                subprocess.check_call(["dd", "if=/dev/zero", f"of=./ramfs/{length}", "bs=1024", f"count={round(length / 1024)}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            got = get_output(["./ft_ssl", sys.argv[1], "-q", f"./ramfs/{length}"])
-            expected = get_output([f"{sys.argv[1]}sum", f"./ramfs/{length}"]).split()[0]
-            if got != expected:
-                print(f"[fuzz] length={str(length).ljust(5)}/1e9, {expected} != {got} -> KO", flush=True)
-                exit(1)
-            else:
-                print(f"[fuzz] length={str(length).ljust(5)}/1e9, {expected} == {got} -> OK", end="\r", flush=True)
-            os.remove(f"./ramfs/{length}")
-        print()
+
+    chunked_corpus = _corpus_chunk(CORPUSES[selected_corpus][sys.argv[2]])
+    run_fuzzer(chunked_corpus, mode=args.mode, alg=args.alg)

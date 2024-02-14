@@ -67,7 +67,7 @@ I've used a handmade fuzzing tool to test the robustness of my implementation. I
 The tool requires Python3, and uses `hashlib` along with `subprocess`.
 
 > [!NOTE]
-> The code is extremely dirty, it was just a quick and dirty tool to test my implementation.
+> The code is not commented, but it works fine.
 
 ## Modes
 
