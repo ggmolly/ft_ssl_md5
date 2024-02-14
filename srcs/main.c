@@ -19,16 +19,8 @@ void parse_arg_input(t_context *ctx, char *arg) {
         }
         // Copy bytes from the buffer to the internal buffer
         ctx_chomp(ctx, (byte *)arg + i, buffer_length);
-        if (ctx->chomped_bytes + buffer_length == ctx->known_size) {
-            ctx->final_fn(ctx);
-        }
-        // Process the buffer
-        ctx->digest_fn(ctx);
     }
-    if (ctx->known_size % BUFFER_SIZE == 0) {
-        ctx->buffer_size = 0;
-        ctx->final_fn(ctx);
-    }
+    ctx->final_fn(ctx);
 }
 
 /**
@@ -84,7 +76,6 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
         }
     }
     ctx->final_fn(ctx);
-    ctx->digest_fn(ctx);
     if (echo && !IS_SET(flags, FLAG_Q)) {
         write(1, "\")= ", 4);
     }
