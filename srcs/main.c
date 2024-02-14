@@ -67,6 +67,7 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
         bytes_read = read(fd, buffer, BUFFER_SIZE);
         if (bytes_read == -1) {
             print_error(ERR_FILE_READ_FAILED, path);
+            close(fd);
             return (false);
         } else if (bytes_read == 0) {
             eof = true;
