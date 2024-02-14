@@ -1,6 +1,7 @@
 CC := gcc
 INCLUDE_FLAGS := -I includes/
-CFLAGS := ${INCLUDE_FLAGS} -MMD -g3 -Wall -Wextra -Werror -Ofast #-fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize=pointer-subtract -fsanitize=pointer-compare -fsanitize=pointer-overflow # -O2 -march=native -pipe
+# CFLAGS := ${INCLUDE_FLAGS} -g3 -MMD -Wall -Wextra -Werror -fsanitize=address -fsanitize=undefined -fsanitize=leak -fsanitize=pointer-subtract -fsanitize=pointer-compare -fsanitize=pointer-overflow
+CFLAGS := ${INCLUDE_FLAGS} -MMD -Wall -Wextra -Werror -Ofast -march=native -pipe
 NAME = ft_ssl
 SRCS = srcs/main.c \
 		srcs/args.c \
