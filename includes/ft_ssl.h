@@ -65,6 +65,21 @@ typedef struct s_context {
     char *alg_name;                     // The name of the algorithm
 } t_context;
 
+typedef t_context (*init_func)(u64);
+
+
+/**
+ * The subject specifies that the program should be able to handle multiple algorithms.
+ * And that we cannot use if/else if statements to handle the different algorithms.
+ * So we will use a static const array of t_algorithm structures in the main function, and we will iterate over it
+ * to find the correct algorithm.
+*/
+typedef struct s_algorithm {
+    char *name;
+    init_func init;
+    u8 flag;
+} t_algorithm;
+
 // Bit utils functions
 void to_bytes(u32 n, byte *output);
 u32 to_u32(const byte *bytes);

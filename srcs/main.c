@@ -2,6 +2,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+static const t_algorithm algorithms[] = {
+    {"md5", md5_init, FLAG_ALG_MD5},
+    {"sha256", sha256_init, FLAG_ALG_SHA256},
+    {NULL, NULL, 0}
+};
+
 /**
  * @brief Passes the argument to the crypto context, when -s flag is used.
  * 
@@ -94,30 +100,33 @@ int main(int argc, char **argv) {
         write(2, " command [flags] [file/string]\n", 30);
         return (1);
     }
-
     u8 flags = 0;
     t_context crypto_ctx;
 
-    if (ft_strncmp(argv[1], "md5\0", 4) == 0) {
-        flags |= FLAG_ALG_MD5;
-        crypto_ctx = md5_init(0);
-    } else if (ft_strncmp(argv[1], "sha256\0", 7) == 0) {
-        flags |= FLAG_ALG_SHA256;
-        crypto_ctx = sha256_init(0);
-    } else {
+    // Find the algorithm that corresponds to the first argument
+    for (i32 i = 0; algorithms[i].name != NULL; i++) {
+        if (ft_strncmp(argv[1], algorithms[i].name, ft_strlen(algorithms[i].name)) == 0) {
+            flags |= algorithms[i].flag;
+            crypto_ctx = algorithms[i].init(0);
+            break;
+        }
+    }
+
+    // if no algorithm was found, print an error and return
+    if (crypto_ctx.alg_name == NULL) {
         print_error(ERR_ALG_NOT_FOUND, argv[1]);
         return (1);
     }
 
+    // Otherwise, we can parse the arguments
     i32 parameters = parse_parameters(argc, argv, &flags);
-
     // if -p was passed, read from stdin, or if only parameters were passed, read from stdin
     if (IS_SET(flags, FLAG_P)) {
         parse_file_input(&crypto_ctx, NULL, flags);
         ctx_print_digest(&crypto_ctx, NULL, false, flags);
     }
 
-    // Consider the rest of the arguments as files, except -s and the following argument
+    // Consider the rest of the arguments as files, except -s and the following arguments
     for (i32 i = 2 + parameters; i < argc; i++) {
         crypto_ctx.reset_fn(&crypto_ctx);
         char *next = get_next_arg(argc, argv, i+1);
