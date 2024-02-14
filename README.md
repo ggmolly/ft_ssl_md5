@@ -57,13 +57,17 @@ ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb "a"
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 empty_file
 ```
 
+> [!IMPORTANT]
+> This implementation of SHA-256 only works with little-endian systems.
+
 # Fuzzing
 
 I've used a handmade fuzzing tool to test the robustness of my implementation. It checks if the output of my implementation matches the standard implementation of `md5` and `sha256` for a given input, for random inputs of length 1 to 65535.
 
 The tool requires Python3, and uses `hashlib` along with `subprocess`.
 
-> NOTE: The code is extremely dirty, it was just a quick and dirty tool to test my implementation.
+> [!NOTE]
+> The code is extremely dirty, it was just a quick and dirty tool to test my implementation.
 
 ## Modes
 
@@ -71,9 +75,11 @@ The tool requires Python3, and uses `hashlib` along with `subprocess`.
 - `file`, writes the input to a file, and passes the file to the program, thus hashing the input as a file.
 - `huge_file`, writes the input to a file, and passes the file to the program, file size ranges from 1 KB to 1 GB.
 
-> WARNING: Both `file` and `huge_file` requires Linux, as their data is pulled from `/dev/zero`.
+> [!WARNING]
+> Both `file` and `huge_file` requires Linux, as their data is pulled from `/dev/zero`.
 
-> WARNING: I recommend using a `ramfs`, you can create one with root privileges using the `idempotent_ramfs.sh` script.
+> [!WARNING]
+> I recommend using a `ramfs`, you can create one with root privileges using the `idempotent_ramfs.sh` script.
 
 ## Usage
 
@@ -87,5 +93,5 @@ $ python3 fuzz.py [md5|sha256] [text|file|huge_file]
 - [RFC 6234](https://tools.ietf.org/html/rfc6234)
 - [Wikipedia MD5](https://en.wikipedia.org/wiki/MD5)
 - [Wikipedia SHA-2](https://en.wikipedia.org/wiki/SHA-2)
-- [Zunawe's MD5 implementation in C](https://github.com/unawe/md5-c), very helpful to debug my implementation.
-- [EddieEldridge's SHA-256 implementation in C](https://github.com/EddieEldridge/SHA-256), also very helpful to debug my implementation.
+- [Zunawe's MD5 implementation in C](https://github.com/zunawe/md5-c), very helpful to debug my implementation.
+- [EddieEldridge's SHA-256 implementation in C](https://github.com/EddieEldridge/SHA256-in-C), also very helpful to debug my implementation.
