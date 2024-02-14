@@ -13,12 +13,14 @@ void ctx_chomp(t_context *ctx, const byte *buf, u64 n) {
     if (ctx->buffer_size + n > BUFFER_SIZE) {
         u64 to_copy = BUFFER_SIZE - ctx->buffer_size;
         ft_memcpy(ctx->buffer + ctx->buffer_size, buf, to_copy);
+        ctx->chomped_bytes += to_copy;
         ctx->buffer_size += to_copy;
         ctx->digest_fn(ctx);
         ctx->buffer_size = 0;
         ctx_chomp(ctx, buf + to_copy, n - to_copy);
     } else {
         ft_memcpy(ctx->buffer + ctx->buffer_size, buf, n);
+        ctx->chomped_bytes += n;
         ctx->buffer_size += n;
     }
 }
