@@ -78,9 +78,6 @@ The tool requires Python3, and uses `hashlib` along with `subprocess`.
 > [!WARNING]
 > Both `file` and `huge_file` requires Linux, as their data is pulled from `/dev/zero`.
 
-> [!WARNING]
-> I recommend using a `ramfs`, you can create one with root privileges using the `idempotent_ramfs.sh` script.
-
 ## Usage
 
 ```bash

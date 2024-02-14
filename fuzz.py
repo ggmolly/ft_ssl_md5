@@ -91,7 +91,7 @@ class FuzzingThread(Thread):
     def create_file(self, length: int) -> str:
         file_id = str(uuid4())
         content = random_string(length)
-        path = f"./ramfs/{file_id}"
+        path = f"/tmp/{file_id}"
         with open(path, "w") as f:
             f.write(content)
         return path
@@ -161,9 +161,6 @@ if __name__ == "__main__":
     args = args.parse_args()
 
     selected_corpus = sys.argv[3] if len(sys.argv) > 3 else "all"
-
-    if any([sys.argv[2] == "file", sys.argv[2] == "huge_file"]):
-        assert os.path.exists("./ramfs"), "ramfs not found, please create it using itempotent_ramfs.sh"
 
     chunked_corpus = _corpus_chunk(CORPUSES[selected_corpus][sys.argv[2]])
     run_fuzzer(chunked_corpus, mode=args.mode, alg=args.alg)
