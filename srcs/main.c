@@ -61,7 +61,7 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
     // If -p is set, and path is NULL, echo stdin to stdout
     echo = IS_SET(flags, FLAG_P) && path == NULL;
     if (echo && !IS_SET(flags, FLAG_Q)) {
-        write(1, "(\"", 2);
+        ft_putstr_fd(1, "(\"", 2);
     }
     while (!eof) {
         bytes_read = read(fd, buffer, BUFFER_SIZE);
@@ -83,12 +83,12 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
             }
         }
         if (echo) {
-            write(1, buffer, bytes_read);
+            ft_putstr_fd(1, buffer, (i64) bytes_read);
         }
     }
     ctx->final_fn(ctx);
     if (echo && !IS_SET(flags, FLAG_Q)) {
-        write(1, "\") = ", 5);
+        ft_putstr_fd(1, "\") = ", 5);
     }
     close(fd);
     return (true);
@@ -100,9 +100,9 @@ char *get_next_arg(i32 argc, char **argv, i32 offset) {
 
 int main(int argc, char **argv) {
     if (argc == 1) {
-        write(2, "usage: ", 7);
-        write(2, argv[0], ft_strlen(argv[0]));
-        write(2, " command [flags] [file/string]\n", 30);
+        ft_putstr_fd(2, "usage: ", 7);
+        ft_putstr_fd(2, argv[0], ft_strlen(argv[0]));
+        ft_putstr_fd(2, " command [flags] [file/string]\n", 30);
         return (1);
     }
     u8 flags = 0;
@@ -120,19 +120,19 @@ int main(int argc, char **argv) {
 
     // if no algorithm was found, print an error and return
     if (crypto_ctx.alg_name == NULL) {
-        write(2, "ft_ssl: Error: '", 16);
-        write(2, argv[1], ft_strlen(argv[1]));
-        write(2, "' is an invalid command.\n\nCommands:\n", 36);
+        ft_putstr_fd(2, "ft_ssl: Error: '", 16);
+        ft_putstr_fd(2, argv[1], ft_strlen(argv[1]));
+        ft_putstr_fd(2, "' is an invalid command.\n\nCommands:\n", 36);
         for (i32 i = 0; algorithms[i].name != NULL; i++) {
-            write(2, algorithms[i].name, ft_strlen(algorithms[i].name));
-            write(2, "\n", 1);
+            ft_putstr_fd(2, algorithms[i].name, ft_strlen(algorithms[i].name));
+            ft_putstr_fd(2, "\n", 1);
         }
-        write(2, "\nFlags:\n", 8);
+        ft_putstr_fd(2, "\nFlags:\n", 8);
         for (i32 i = 0; i < 4; i++) {
-            write(2, valid_flags[i], ft_strlen(valid_flags[i]));
-            write(2, " ", 1);
+            ft_putstr_fd(2, valid_flags[i], ft_strlen(valid_flags[i]));
+            ft_putstr_fd(2, " ", 1);
         }
-        write(2, "\n", 1);
+        ft_putstr_fd(2, "\n", 1);
         return (1);
     }
 
