@@ -75,11 +75,14 @@ void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags) {
             write(1, " ", 1);
             write(1, arg, ft_strlen(arg));
             write(1, "\n", 1);
-        } else {
+        } else if (arg != NULL) {
             write(1, digest, ctx->digest_size * 2);
             write(1, " \"", 2);
             write(1, arg, ft_strlen(arg));
             write(1, "\"\n", 2);
+        } else {
+            write(1, digest, ctx->digest_size * 2);
+            write(1, "\n", 1);
         }
         return ;
     } else {

@@ -78,7 +78,7 @@ bool parse_file_input(t_context *ctx, char *path, u8 flags) {
         if (echo &&
             (eof || (ctx->known_size != 0 && ctx->known_size == ctx->chomped_bytes + ctx->buffer_size) || bytes_read < BUFFER_SIZE)
         ) {
-            if (buffer[bytes_read-1] == '\n' && !IS_SET(flags, FLAG_Q)) {
+            if (buffer[bytes_read-1] == '\n' && IS_SET(flags, FLAG_P)) {
                 bytes_read--;
             }
         }
