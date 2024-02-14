@@ -47,11 +47,13 @@ void sha256_digest(t_context *ctx) {
     h6 = to_u32(ctx->digest + 24);
     h7 = to_u32(ctx->digest + 28);
 
-    for (u32 offset = 0; offset + 64 <= ctx->buffer_size; offset += 64) {
+    for (u32 offset = 0; offset < ctx->buffer_size; offset += 64) {
+        for (i32 i = 0; i < 64; i++) {
+        }
         // break into 16 32-bit words
         for (i32 i = 0; i < 16; i++) {
             words[i] = to_u32(ctx->buffer + offset + i * 4);
-            // swap endianness
+            // swap endianness (little to big endian)
             words[i] = (words[i] >> 24) | ((words[i] >> 8) & 0xFF00) | ((words[i] << 8) & 0xFF0000) | (words[i] << 24);
         }
 
@@ -100,6 +102,7 @@ void sha256_digest(t_context *ctx) {
         h5 += f;
         h6 += g;
         h7 += h;
+
     }
     // store the result in the digest
     to_bytes(h0, ctx->digest);
@@ -110,13 +113,12 @@ void sha256_digest(t_context *ctx) {
     to_bytes(h5, ctx->digest + 20);
     to_bytes(h6, ctx->digest + 24);
     to_bytes(h7, ctx->digest + 28);
-    ctx->chomped_bytes += ctx->buffer_size;
 
     // swap endianness of digest
-    for (i32 i = 0; i < 8; i++) {
-        u32 tmp = to_u32(ctx->digest + i * 4);
-        to_bytes((tmp >> 24) | ((tmp >> 8) & 0xFF00) | ((tmp << 8) & 0xFF0000) | (tmp << 24), ctx->digest + i * 4);
-    }
+    // for (i32 i = 0; i < 8; i++) {
+    //     u32 tmp = to_u32(ctx->digest + i * 4);
+    //     to_bytes((tmp >> 24) | ((tmp >> 8) & 0xFF00) | ((tmp << 8) & 0xFF0000) | (tmp << 24), ctx->digest + i * 4);
+    // }
 }
 
 /**
@@ -131,21 +133,26 @@ void sha256_digest(t_context *ctx) {
  */
 void sha256_final(t_context *ctx) {
     // append 1-bit
-    u64 initial_length = ctx->chomped_bytes + ctx->buffer_size;
+    u64 bits = (ctx->chomped_bytes) * 8;
     ctx->buffer[ctx->buffer_size++] = 0b10000000;
-    u32 msg_length = ctx->buffer_size;
-    // pad with 0s to make the message congruent to 448 (mod 512)
-    while (msg_length % 64 != 56) {
-        ctx->buffer[ctx->buffer_size] = 0b00000000;
-        msg_length++;
-        ctx->buffer_size++;
+
+    // append '0' bits until the total length is 448 mod 512
+    while (ctx->buffer_size % 64 != 56) {
+        ctx->buffer[ctx->buffer_size++] = 0;
     }
-    // append L as a 64-bit big-endian integer, making the total post-processed length a multiple of 512 bits
-    u64 length = initial_length * 8;
+
+    // append 64-bit length of the original message
+    for (int i = 0; i < 8; i++) {
+        ctx->buffer[ctx->buffer_size++] = (bits >> (56 - i * 8)) & 0xFF;
+    }
+    ctx->digest_fn(ctx);
+
+    // swap endianness of digest
     for (i32 i = 0; i < 8; i++) {
-        ctx->buffer[ctx->buffer_size + i] = (length >> (56 - i * 8)) & 0xFF;
+        u32 tmp = to_u32(ctx->digest + i * 4);
+        to_bytes((tmp >> 24) | ((tmp >> 8) & 0xFF00) | ((tmp << 8) & 0xFF0000) | (tmp << 24), ctx->digest + i * 4);
     }
-    ctx->buffer_size += 8;
+
 }
 
 
