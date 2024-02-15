@@ -113,12 +113,6 @@ void sha256_digest(t_context *ctx) {
     to_bytes(h5, ctx->digest + 20);
     to_bytes(h6, ctx->digest + 24);
     to_bytes(h7, ctx->digest + 28);
-
-    // swap endianness of digest
-    // for (i32 i = 0; i < 8; i++) {
-    //     u32 tmp = to_u32(ctx->digest + i * 4);
-    //     to_bytes((tmp >> 24) | ((tmp >> 8) & 0xFF00) | ((tmp << 8) & 0xFF0000) | (tmp << 24), ctx->digest + i * 4);
-    // }
 }
 
 /**
