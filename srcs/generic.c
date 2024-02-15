@@ -26,19 +26,6 @@ void ctx_chomp(t_context *ctx, const byte *buf, u64 n) {
 }
 
 /**
- * @brief Sets the stream as finished, and calls context's finalization function
- * 
- * @note Can be manually called, no-op if the stream is already finished
- * 
- * @param ctx Hash context
-*/
-void ctx_finish(t_context *ctx) {
-    if (ctx->stream_finished) return;
-    ctx->stream_finished = true;
-    ctx->final_fn(ctx);
-}
-
-/**
  * @brief Writes the digest to an output buffer, must be at least ctx->digest_size bytes long
  * 
  * @note The buffer is not null-terminated
