@@ -9,9 +9,6 @@ from uuid import uuid4
 from typing import Tuple
 from threading import Thread, Lock
 
-class FuzzingError(Exception):
-    pass
-
 CORPUSES = {
     "tiny": {
         "text": range(1, 65535, 72),
@@ -35,11 +32,7 @@ CORPUSES = {
     },
 }
 
-TEXT_CORPUS_MAX = 65535
-FILE_CORPUS = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
-
 PRINT_LOCK = Lock()
-ERROR_LOCK = Lock()
 
 def md5(s: str) -> str:
     return hashlib.md5(s.encode()).hexdigest()
