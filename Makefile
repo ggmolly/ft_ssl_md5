@@ -19,7 +19,7 @@ DEPS = $(SRCS:.c=.d)
 	${CC} $(CFLAGS) -c $< -o $@
 
 $(NAME): $(OBJS) Makefile
-	${CC} $(CFLAGS) -o $(NAME) $(OBJS) -lm
+	${CC} $(CFLAGS) -o $(NAME) $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(DEPS)
