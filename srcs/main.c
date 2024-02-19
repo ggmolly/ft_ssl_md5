@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 
     // Find the algorithm that corresponds to the first argument
     for (i32 i = 0; algorithms[i].name != NULL; i++) {
-        if (ft_strncmp(argv[1], algorithms[i].name, ft_strlen(algorithms[i].name)) == 0) {
+        if (ft_strncmp(argv[1], algorithms[i].name, ft_strlen(argv[i])) == 0) {
             flags |= algorithms[i].flag;
             crypto_ctx = algorithms[i].init(0);
             break;

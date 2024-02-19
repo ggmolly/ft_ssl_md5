@@ -86,6 +86,7 @@ void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags) {
             } else {
                 ft_putstr_fd(1, "(stdin) = ", 10);
             }
+            ft_putstr_fd(1, digest, ctx->digest_size * 2);
             ft_putstr_fd(1, "\n", 1);
         } else {
             ft_putstr_fd(1, ctx->alg_name, ft_strlen(ctx->alg_name));
