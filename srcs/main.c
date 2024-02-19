@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     if (argc == 1) {
         ft_putstr_fd(2, "usage: ", 7);
         ft_putstr_fd(2, argv[0], ft_strlen(argv[0]));
-        ft_putstr_fd(2, " command [flags] [file/string]\n", 30);
+        ft_putstr_fd(2, " command [flags] [file/string]\n", 31);
         return (1);
     }
     u8 flags = 0;
