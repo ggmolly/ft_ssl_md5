@@ -49,7 +49,7 @@ i32 parse_parameters(int argc, char **argv, u8* flags) {
     for (i32 i = 2; i < argc; i++) {
         if (argv[i][0] == '-') {
             if (!parse_arg(argv[i], flags)) {
-                return (1);
+                return (-1);
             } else if (argv[i][1] == 's') {
                 break;
             }

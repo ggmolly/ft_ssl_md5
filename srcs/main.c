@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 
     // Find the algorithm that corresponds to the first argument
     for (i32 i = 0; algorithms[i].name != NULL; i++) {
-        if (ft_strncmp(argv[1], algorithms[i].name, ft_strlen(argv[i])) == 0) {
+        if (ft_strcmp(argv[1], algorithms[i].name) == 0) {
             flags |= algorithms[i].flag;
             crypto_ctx = algorithms[i].init(0);
             break;
@@ -138,6 +138,9 @@ int main(int argc, char **argv) {
 
     // Otherwise, we can parse the arguments
     i32 parameters = parse_parameters(argc, argv, &flags);
+    if (parameters == -1) {
+        return (1);
+    }
     // if -p was passed, read from stdin, or if only parameters were passed, read from stdin
     if (IS_SET(flags, FLAG_P)) {
         parse_file_input(&crypto_ctx, NULL, flags);
