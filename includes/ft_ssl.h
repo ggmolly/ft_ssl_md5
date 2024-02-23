@@ -92,7 +92,7 @@ void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags);
 
 // hehe funny ft functions :^)
 i32 ft_strlen(const char *s);
-i32 ft_strncmp(const char *s1, const char *s2, u64 n);
+i32 ft_strcmp(const char *s1, const char *s2);
 void *ft_memcpy(void *dest, const void *src, u64 n);
 i64 ft_putstr_fd(i32 fd, const void *s, i64 len);
 

@@ -9,15 +9,12 @@ i32 ft_strlen(const char *s) {
     return (i);
 }
 
-// glibc has an interesting 4x unrolled version of this function
-// but it's not very interesting
-i32 ft_strncmp(const char *s1, const char *s2, u64 n) {
-    while (n > 0 && *s1 != 0x00 && *s1 == *s2) {
-        n--;
+i32 ft_strcmp(const char *s1, const char *s2) {
+    while (*s1 && *s1 == *s2) {
         s1++;
         s2++;
     }
-    return (n == 0 ? 0 : *(unsigned char *)s1 - *(unsigned char *)s2);
+    return (*(u8 *)s1 - *(u8 *)s2);
 }
 
 // glibc's memcpy has a multi-byte copy, but same as strncmp, it's not very interesting
