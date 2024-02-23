@@ -81,9 +81,7 @@ void ctx_print_digest(t_context *ctx, char *arg, bool is_file, u8 flags) {
             ft_putstr_fd(1, digest, ctx->digest_size * 2);
             ft_putstr_fd(1, "\n", 1);
         } else if (arg == NULL) {
-            if (IS_SET(flags, FLAG_P)) {
-                ft_putstr_fd(1, digest, ctx->digest_size * 2);
-            } else {
+            if (!IS_SET(flags, FLAG_P)) {
                 ft_putstr_fd(1, "(stdin) = ", 10);
             }
             ft_putstr_fd(1, digest, ctx->digest_size * 2);
