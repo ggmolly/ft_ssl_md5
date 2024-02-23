@@ -51,3 +51,7 @@ jobs:
     - name: Fuzzing SHA256 on bigger files
       run: |
         python3 fuzz.py sha256 huge_file medium
+
+    - name: Testing subject's examples
+      run: |
+        python3 fuzz.py md5 text subject
