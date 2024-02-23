@@ -31,6 +31,7 @@ CORPUSES = {
         "huge_file": [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9],
     },
     "subject": {}, # special case
+    "args": {},
 }
 
 PRINT_LOCK = Lock()
@@ -147,6 +148,10 @@ def run_args(args: list, stdin: str = "") -> str:
     out, _ = p.communicate(stdin.encode())
     return out.decode().strip()
 
+def run_exit_code(args: list) -> int:
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    return p.wait()
+
 if __name__ == "__main__":
     try:
         subprocess.check_call(["make"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -160,10 +165,10 @@ if __name__ == "__main__":
     args = args.parse_args()
 
     selected_corpus = sys.argv[3] if len(sys.argv) > 3 else "all"
-    if selected_corpus != "subject":
+    if any([selected_corpus == "tiny", selected_corpus == "small", selected_corpus == "medium", selected_corpus == "all"]):
         chunked_corpus = _corpus_chunk(CORPUSES[selected_corpus][sys.argv[2]])
         run_fuzzer(chunked_corpus, mode=args.mode, alg=args.alg)
-    else: # python3 fuzz.py md5 text subject
+    elif selected_corpus == "subject": # python3 fuzz.py md5 text subject
         # echo '42 is nice' | ./ft_ssl md5
         assert run_args(["./ft_ssl", "md5"], "42 is nice\n") == "(stdin) = 35f1d6de0302e2086a4e472266efb3a9"
         # echo '42 is nice' | ./ft_ssl md5 -p
@@ -218,3 +223,38 @@ if __name__ == "__main__":
         assert run_args(["./ft_ssl", "sha256", "-r", "-p", "-s", "foo", "file", "-s", "bar"], "one more thing\n") == '("one more thing") = 720bbf63077e0bea3b70c87954123daa6fcf32f973f4d646622bd016b140ec75\n2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae "foo"\nf9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705 file\nft_ssl: file not found: \'-s\'\nft_ssl: file not found: \'bar\''
         # echo "just to be extra clear" | ./ft_ssl sha256 -r -q -p -s "foo" file
         assert run_args(["./ft_ssl", "sha256", "-r", "-q", "-p", "-s", "foo", "file"], "just to be extra clear\n") == 'just to be extra clear\n41c3da28172faf72bb777d6a428b6d801427d02513c56cd9e3672f44383f8eee\n2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae\nf9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705'
+    elif selected_corpus == "args":
+        # algorithms
+        assert run_exit_code(["./ft_ssl", "m", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "md", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "md5", "-s", "foo"]) == 0
+        assert run_exit_code(["./ft_ssl", "md55", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "s", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "sh", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "sha", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "sha2", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "sha25", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "sha256", "-s", "foo"]) == 0
+        assert run_exit_code(["./ft_ssl", "sha2566", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "ssha", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "ssha256", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "mmd5", "-s", "foo"]) != 0
+        assert run_exit_code(["./ft_ssl", "mdd5", "-s", "foo"]) != 0
+        for i in range(1, 256):
+            assert run_exit_code(["./ft_ssl", f"{chr(i)}", "-s", "foo"]) != 0
+        for i in range(1000): # some random stuff
+            s = random_string(random.randint(1, 32))
+            assert run_exit_code(["./ft_ssl", s, "-s", "foo"]) != 0 if s != "md5" and s != "sha256" else 0, f"algo {s} worked"
+        # flags
+        assert run_exit_code(["./ft_ssl", "md5", "-s"]) != 0
+        assert run_exit_code(["./ft_ssl", "sha256", "-s"]) != 0
+        assert run_exit_code(["./ft_ssl", "md5", "-s", "a"]) == 0
+        assert run_exit_code(["./ft_ssl", "md5", "-s", "a"]) == 0
+        for i in range(1, 256):
+            c = chr(i)
+            if c != "s" and c != "p" and c != "q" and c != "r" and c != ' ':
+                assert run_exit_code(["./ft_ssl", "md5", f"-{c}", "-s", "a"]) != 0, f"flag {c} worked"
+                assert run_exit_code(["./ft_ssl", "sha256", f"-{c}", "-s", "a"]) != 0, f"flag {c} worked"
+    else:
+        print("[!] unknown corpus", selected_corpus)
+        exit(1)
