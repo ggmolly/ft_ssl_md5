@@ -55,3 +55,7 @@ jobs:
     - name: Testing subject's examples
       run: |
         python3 fuzz.py md5 text subject
+
+    - name: Fuzz arguments
+      run: |
+        python3 fuzz.py md5 text args
