@@ -30,6 +30,7 @@ CORPUSES = {
         "file": range(1, 65535, 1),
         "huge_file": [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9],
     },
+    "subject": {}, # special case
 }
 
 PRINT_LOCK = Lock()
@@ -141,6 +142,11 @@ def _corpus_chunk(corpus: list) -> list:
         chunk.append(corpus[i:i+chunk_size])
     return chunk
 
+def run_args(args: list, stdin: str = "") -> str:
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
+    out, _ = p.communicate(stdin.encode())
+    return out.decode().strip()
+
 if __name__ == "__main__":
     try:
         subprocess.check_call(["make"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -154,6 +160,61 @@ if __name__ == "__main__":
     args = args.parse_args()
 
     selected_corpus = sys.argv[3] if len(sys.argv) > 3 else "all"
+    if selected_corpus != "subject":
+        chunked_corpus = _corpus_chunk(CORPUSES[selected_corpus][sys.argv[2]])
+        run_fuzzer(chunked_corpus, mode=args.mode, alg=args.alg)
+    else: # python3 fuzz.py md5 text subject
+        # echo '42 is nice' | ./ft_ssl md5
+        assert run_args(["./ft_ssl", "md5"], "42 is nice\n") == "(stdin) = 35f1d6de0302e2086a4e472266efb3a9"
+        # echo '42 is nice' | ./ft_ssl md5 -p
+        assert run_args(["./ft_ssl", "md5", "-p"], "42 is nice\n") == '("42 is nice") = 35f1d6de0302e2086a4e472266efb3a9'
+        # echo "Pity the living." | ./ft_ssl md5 -q -r
+        assert run_args(["./ft_ssl", "md5", "-q", "-r"], "Pity the living.\n") == "e20c3b973f63482a778f3fd1869b7f25"
+        with open("file", "w") as f:
+            f.write("And above all,\n")
+        # ./ft_ssl md5 file
+        assert run_args(["./ft_ssl", "md5", "file"]) == 'MD5 (file) = 53d53ea94217b259c11a5a2d104ec58a'
+        # ./ft_ssl md5 -r file
+        assert run_args(["./ft_ssl", "md5", "-r", "file"]) == '53d53ea94217b259c11a5a2d104ec58a file'
+        # ./ft_ssl md5 -s "pity those that aren't following baerista on spotify."
+        assert run_args(["./ft_ssl", "md5", "-s", "pity those that aren't following baerista on spotify."]) == "MD5 (\"pity those that aren't following baerista on spotify.\") = a3c990a1964705d9bf0e602f44572f5f"
+        # echo "be sure to handle edge cases carefully" | ./ft_ssl md5 -p file
+        assert run_args(["./ft_ssl", "md5", "-p", "file"], "be sure to handle edge cases carefully\n") == '("be sure to handle edge cases carefully") = 3553dc7dc5963b583c056d1b9fa3349c\nMD5 (file) = 53d53ea94217b259c11a5a2d104ec58a'
+        # echo "some of this will not make sense at first" | ./ft_ssl md5 file
+        assert run_args(["./ft_ssl", "md5", "file"], "some of this will not make sense at first\n") == 'MD5 (file) = 53d53ea94217b259c11a5a2d104ec58a'
+        # echo "but eventually you will understand" | ./ft_ssl md5 -p -r file
+        assert run_args(["./ft_ssl", "md5", "-p", "-r", "file"], "but eventually you will understand\n") == '("but eventually you will understand") = dcdd84e0f635694d2a943fa8d3905281\n53d53ea94217b259c11a5a2d104ec58a file'
+        # echo "GL HF let's go" | ./ft_ssl md5 -p -s "foo" file
+        assert run_args(["./ft_ssl", "md5", "-p", "-s", "foo", "file"], "GL HF let's go\n") == '("GL HF let\'s go") = d1e3cc342b6da09480b27ec57ff243e2\nMD5 (\"foo\") = acbd18db4cc2f85cedef654fccc4a4d8\nMD5 (file) = 53d53ea94217b259c11a5a2d104ec58a'
+        # echo "one more thing" | ./ft_ssl md5 -r -p -s "foo" file -s "bar"
+        assert run_args(["./ft_ssl", "md5", "-r", "-p", "-s", "foo", "file", "-s", "bar"], "one more thing\n") == '("one more thing") = a0bd1876c6f011dd50fae52827f445f5\nacbd18db4cc2f85cedef654fccc4a4d8 "foo"\n53d53ea94217b259c11a5a2d104ec58a file\nft_ssl: file not found: \'-s\'\nft_ssl: file not found: \'bar\''
+        # echo "just to be extra clear" | ./ft_ssl md5 -r -q -p -s "foo" file
+        assert run_args(["./ft_ssl", "md5", "-r", "-q", "-p", "-s", "foo", "file"], "just to be extra clear\n") == 'just to be extra clear\n3ba35f1ea0d170cb3b9a752e3360286c\nacbd18db4cc2f85cedef654fccc4a4d8\n53d53ea94217b259c11a5a2d104ec58a'
 
-    chunked_corpus = _corpus_chunk(CORPUSES[selected_corpus][sys.argv[2]])
-    run_fuzzer(chunked_corpus, mode=args.mode, alg=args.alg)
+        # Run the same commands with sha256 instead
+        # echo '42 is nice' | ./ft_ssl sha256
+        assert run_args(["./ft_ssl", "sha256"], "42 is nice\n") == "(stdin) = a5482539287a4069ebd3eb45a13a47b1968316c442a7e69bc6b9c100b101d65d"
+        # echo '42 is nice' | ./ft_ssl sha256 -p
+        assert run_args(["./ft_ssl", "sha256", "-p"], "42 is nice\n") == '("42 is nice") = a5482539287a4069ebd3eb45a13a47b1968316c442a7e69bc6b9c100b101d65d'
+        # echo "Pity the living." | ./ft_ssl sha256 -q -r
+        assert run_args(["./ft_ssl", "sha256", "-q", "-r"], "Pity the living.\n") == "40133cfe543247c1cae0ffb0003c1179ce9fb0046bee19f9fca167380643ba45"
+        with open("file", "w") as f:
+            f.write("And above all,\n")
+        # ./ft_ssl sha256 file
+        assert run_args(["./ft_ssl", "sha256", "file"]) == 'SHA256 (file) = f9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705'
+        # ./ft_ssl sha256 -r file
+        assert run_args(["./ft_ssl", "sha256", "-r", "file"]) == 'f9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705 file'
+        # ./ft_ssl sha256 -s "pity those that aren't following baerista on spotify."
+        assert run_args(["./ft_ssl", "sha256", "-s", "pity those that aren't following baerista on spotify."]) == "SHA256 (\"pity those that aren't following baerista on spotify.\") = 7838c25c9debff86c584245d67b429186d3850c89da31c0b49b8d0380a3e14bf"
+        # echo "be sure to handle edge cases carefully" | ./ft_ssl sha256 -p file
+        assert run_args(["./ft_ssl", "sha256", "-p", "file"], "be sure to handle edge cases carefully\n") == '("be sure to handle edge cases carefully") = ef9241f878a1da676104a81239792a2817bc0390a427ca20bad1a59030fd20c2\nSHA256 (file) = f9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705'
+        # echo "some of this will not make sense at first" | ./ft_ssl sha256 file
+        assert run_args(["./ft_ssl", "sha256", "file"], "some of this will not make sense at first\n") == 'SHA256 (file) = f9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705'
+        # echo "but eventually you will understand" | ./ft_ssl sha256 -p -r file
+        assert run_args(["./ft_ssl", "sha256", "-p", "-r", "file"], "but eventually you will understand\n") == '("but eventually you will understand") = 43da940057fd3b7453ee91b3a056a41343e6f0bce315570ed27e06c993a539da\nf9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705 file'
+        # echo "GL HF let's go" | ./ft_ssl sha256 -p -s "foo" file
+        assert run_args(["./ft_ssl", "sha256", "-p", "-s", "foo", "file"], "GL HF let's go\n") == '("GL HF let\'s go") = f33201f3d70c9dccccec022e2ff0df2006e016f153f600407917d14955fbec22\nSHA256 (\"foo\") = 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae\nSHA256 (file) = f9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705'
+        # echo "one more thing" | ./ft_ssl sha256 -r -p -s "foo" file -s "bar"
+        assert run_args(["./ft_ssl", "sha256", "-r", "-p", "-s", "foo", "file", "-s", "bar"], "one more thing\n") == '("one more thing") = 720bbf63077e0bea3b70c87954123daa6fcf32f973f4d646622bd016b140ec75\n2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae "foo"\nf9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705 file\nft_ssl: file not found: \'-s\'\nft_ssl: file not found: \'bar\''
+        # echo "just to be extra clear" | ./ft_ssl sha256 -r -q -p -s "foo" file
+        assert run_args(["./ft_ssl", "sha256", "-r", "-q", "-p", "-s", "foo", "file"], "just to be extra clear\n") == 'just to be extra clear\n41c3da28172faf72bb777d6a428b6d801427d02513c56cd9e3672f44383f8eee\n2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae\nf9eb9a5a063eb386a18525c074e1065c316ec434f911e0d7d59ba2d9fd134705'
